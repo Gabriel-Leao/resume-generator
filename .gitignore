@@ -1,0 +1,18 @@
+# Virtual environment (like node_modules)
+.venv/
+venv/
+
+# Generated PDFs
+output/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
+data.json

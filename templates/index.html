@@ -1,0 +1,1825 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0d1117;
+        --surface: #161b27;
+        --surface2: #1c2333;
+        --border: #243049;
+        --border2: #2d3d5c;
+        --text: #e2e8f4;
+        --text2: #93a3bf;
+        --text3: #5a6e8c;
+        --accent: #5b8def;
+        --accent-dim: #172040;
+        --green: #34c98b;
+        --green-dim: #0c2a1f;
+        --red: #f05c62;
+        --red-dim: #2c1115;
+        --yellow: #f5a623;
+        --radius-sm: 6px;
+        --radius: 10px;
+        --radius-lg: 14px;
+        --font-ui: "Instrument Sans", sans-serif;
+        --font-head: "Syne", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+        --sidebar-w: 240px;
+        --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      [data-theme="light"] {
+        --bg: #eef2f8;
+        --surface: #ffffff;
+        --surface2: #f0f4fa;
+        --border: #c8d5e8;
+        --border2: #b0c2d9;
+        --text: #0f1c30;
+        --text2: #3a5070;
+        --text3: #6b85a0;
+        --accent: #1b3a6b;
+        --accent-dim: #dde6f5;
+        --green: #0d7a52;
+        --green-dim: #d6f0e6;
+        --red: #c0272d;
+        --red-dim: #fae5e6;
+        --yellow: #b07a10;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        font-family: var(--font-ui);
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        font-size: 14px;
+      }
+
+      /* ── Sidebar ───────────────────────────────────────────── */
+      .sidebar {
+        width: var(--sidebar-w);
+        flex-shrink: 0;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .sidebar-top {
+        padding: 20px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+
+      .logo {
+        font-family: var(--font-head);
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .logo-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent);
+      }
+
+      .btn-new-profile {
+        width: 100%;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-sm);
+        color: var(--accent);
+        font-family: var(--font-ui);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 7px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all var(--transition);
+      }
+      .btn-new-profile:hover {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .sidebar-section {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text3);
+        padding: 14px 16px 6px;
+        flex-shrink: 0;
+      }
+
+      .profile-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 8px 12px;
+      }
+      .profile-list::-webkit-scrollbar {
+        width: 4px;
+      }
+      .profile-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .profile-list::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+      }
+
+      .profile-card {
+        border-radius: var(--radius-sm);
+        padding: 9px 10px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        transition: background var(--transition);
+        position: relative;
+        margin-bottom: 2px;
+      }
+      .profile-card:hover {
+        background: var(--surface2);
+      }
+      .profile-card.active {
+        background: var(--accent-dim);
+        border: 1px solid var(--accent);
+      }
+      .profile-card-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .profile-card.active .profile-card-label {
+        color: var(--accent);
+      }
+      .profile-card-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text3);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .profile-card.active .profile-card-meta {
+        color: var(--accent);
+        opacity: 0.6;
+      }
+
+      .sidebar-bottom {
+        display: none;
+      }
+
+      .theme-switch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: background var(--transition);
+        flex-shrink: 0;
+      }
+      .theme-switch:hover {
+        background: var(--surface2);
+      }
+      .theme-switch-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text2);
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      /* ── Main area ─────────────────────────────────────────── */
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Topbar */
+      .topbar {
+        height: 52px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        flex-shrink: 0;
+        background: var(--surface);
+        gap: 16px;
+      }
+      .topbar-title {
+        font-family: var(--font-head);
+        font-size: 16px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .topbar-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .btn {
+        font-family: var(--font-ui);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 7px 16px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all var(--transition);
+        white-space: nowrap;
+      }
+      .btn-ghost {
+        background: none;
+        border-color: var(--border);
+        color: var(--text2);
+      }
+      .btn-ghost:hover {
+        border-color: var(--border2);
+        color: var(--text);
+        background: var(--surface2);
+      }
+      .btn-danger {
+        background: none;
+        border-color: var(--border);
+        color: var(--red);
+      }
+      .btn-danger:hover {
+        background: var(--red-dim);
+        border-color: var(--red);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .btn-primary:hover {
+        opacity: 0.85;
+      }
+      .btn-success {
+        background: var(--green);
+        color: #0a1a14;
+        border-color: var(--green);
+      }
+      [data-theme="light"] .btn-success {
+        background: var(--green);
+        color: #fff;
+      }
+      .btn-success:hover {
+        opacity: 0.85;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Scrollable content */
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 32px 40px;
+      }
+      .content::-webkit-scrollbar {
+        width: 5px;
+      }
+      .content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .content::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 3px;
+      }
+
+      /* Empty state */
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 12px;
+        color: var(--text3);
+      }
+      .empty-icon {
+        font-size: 48px;
+        filter: grayscale(1) opacity(0.4);
+      }
+      .empty-state h2 {
+        font-family: var(--font-head);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text2);
+      }
+      .empty-state p {
+        font-size: 13.5px;
+      }
+
+      /* ── Section cards ─────────────────────────────────────── */
+      .section-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 16px;
+        overflow: hidden;
+        transition: border-color var(--transition);
+      }
+      .section-card.has-error {
+        border-color: var(--red);
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        cursor: pointer;
+        user-select: none;
+        gap: 12px;
+      }
+      .section-header:hover {
+        background: var(--surface2);
+      }
+      .section-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+        color: var(--accent);
+        font-weight: 700;
+        font-family: var(--font-mono);
+        /* hide emoji on light mode by replacing with accent squares */
+      }
+      .section-title {
+        font-family: var(--font-head);
+        font-size: 13.5px;
+        font-weight: 700;
+      }
+      .section-badge {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1px 8px;
+        color: var(--text3);
+      }
+      .chevron {
+        width: 16px;
+        height: 16px;
+        border-right: 2px solid var(--text3);
+        border-bottom: 2px solid var(--text3);
+        transform: rotate(45deg);
+        transition:
+          transform var(--transition),
+          border-color var(--transition);
+        flex-shrink: 0;
+        margin-bottom: 4px;
+      }
+      .chevron.open {
+        transform: rotate(225deg);
+        margin-bottom: -4px;
+      }
+      .section-header:hover .chevron {
+        border-color: var(--text2);
+      }
+      .section-error-badge {
+        font-size: 10px;
+        background: var(--red-dim);
+        border: 1px solid var(--red);
+        color: var(--red);
+        border-radius: 20px;
+        padding: 1px 8px;
+        font-weight: 600;
+      }
+
+      .section-body {
+        padding: 0 18px 18px;
+        display: none;
+        animation: fadeIn 0.15s ease;
+      }
+      .section-body.open {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ── Form fields ───────────────────────────────────────── */
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .grid-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      .col-span-2 {
+        grid-column: span 2;
+      }
+      .col-span-3 {
+        grid-column: span 3;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .field-label {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--text2);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .field-label .required {
+        color: var(--red);
+        margin-left: 2px;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 8px 11px;
+        font-family: var(--font-ui);
+        font-size: 13.5px;
+        color: var(--text);
+        transition: border-color var(--transition);
+        width: 100%;
+      }
+      .field input::placeholder,
+      .field textarea::placeholder {
+        color: var(--text3);
+      }
+      .field input:focus,
+      .field textarea:focus,
+      .field select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .field input.error,
+      .field textarea.error,
+      .field select.error {
+        border-color: var(--red);
+        background: var(--red-dim);
+      }
+      .field-error {
+        font-size: 11px;
+        color: var(--red);
+        display: none;
+      }
+      .field-error.show {
+        display: block;
+      }
+      .field textarea {
+        resize: vertical;
+        min-height: 80px;
+        line-height: 1.6;
+      }
+      .field select option {
+        background: var(--surface);
+      }
+
+      /* ── Repeat items ──────────────────────────────────────── */
+      .repeat-item {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 14px 16px;
+        margin-bottom: 10px;
+        position: relative;
+      }
+      .repeat-item.has-error {
+        border-color: var(--red);
+      }
+      .repeat-item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .repeat-item-num {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--accent);
+        background: var(--accent-dim);
+        border-radius: 4px;
+        padding: 2px 7px;
+      }
+      .btn-remove-item {
+        background: none;
+        border: none;
+        color: var(--text3);
+        font-size: 12px;
+        cursor: pointer;
+        padding: 3px 7px;
+        border-radius: 4px;
+        transition: all var(--transition);
+        font-family: var(--font-ui);
+      }
+      .btn-remove-item:hover {
+        color: var(--red);
+        background: var(--red-dim);
+      }
+
+      .btn-add-item {
+        width: 100%;
+        background: none;
+        border: 1px dashed var(--border2);
+        border-radius: var(--radius-sm);
+        padding: 9px;
+        font-family: var(--font-ui);
+        font-size: 12.5px;
+        color: var(--text3);
+        cursor: pointer;
+        transition: all var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .btn-add-item:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-dim);
+      }
+
+      /* Bullet list */
+      .bullet-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .bullet-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .bullet-row input {
+        flex: 1;
+      }
+      .btn-rm-bullet {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        width: 28px;
+        height: 28px;
+        color: var(--text3);
+        cursor: pointer;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all var(--transition);
+      }
+      .btn-rm-bullet:hover {
+        border-color: var(--red);
+        color: var(--red);
+        background: var(--red-dim);
+      }
+
+      /* Simple list */
+      .simple-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .simple-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .simple-row input {
+        flex: 1;
+      }
+
+      /* ── Generate bar ──────────────────────────────────────── */
+      .generate-bar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .generate-bar-label {
+        font-family: var(--font-head);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        flex: 1;
+        min-width: 120px;
+      }
+      .generate-bar-label span {
+        display: block;
+        font-family: var(--font-ui);
+        font-size: 11.5px;
+        font-weight: 400;
+        color: var(--text3);
+        margin-top: 1px;
+      }
+
+      /* Toggle */
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .toggle-label {
+        font-size: 13px;
+        color: var(--text2);
+        white-space: nowrap;
+      }
+      .toggle {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: var(--border2);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background var(--transition);
+      }
+      .toggle-track::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        left: 3px;
+        top: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform var(--transition);
+      }
+      .toggle input:checked + .toggle-track {
+        background: var(--accent);
+      }
+      .toggle input:checked + .toggle-track::after {
+        transform: translateX(16px);
+      }
+
+      /* Color picker */
+      .color-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .color-picker-swatch {
+        width: 34px;
+        height: 34px;
+        padding: 2px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        flex-shrink: 0;
+        background: none;
+      }
+      .color-hex {
+        flex: 1;
+        font-family: var(--font-mono) !important;
+        font-size: 12px !important;
+      }
+
+      /* ── Toast ─────────────────────────────────────────────── */
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        padding: 11px 18px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all 0.22s ease;
+        pointer-events: none;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid transparent;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      #toast.success {
+        background: var(--green-dim);
+        border-color: var(--green);
+        color: var(--green);
+      }
+      #toast.error {
+        background: var(--red-dim);
+        border-color: var(--red);
+        color: var(--red);
+      }
+      #toast.info {
+        background: var(--accent-dim);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── Divider ────────────────────────────────────────────── */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 16px 0;
+      }
+
+      /* Unsaved dot */
+      .unsaved-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--yellow);
+        display: none;
+        flex-shrink: 0;
+      }
+      .unsaved-dot.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="logo">
+          <span class="logo-dot"></span>
+          Resume Generator
+        </div>
+        <button class="btn-new-profile" onclick="newProfile()">
+          <span>＋</span> Novo perfil
+        </button>
+      </div>
+      <div class="sidebar-section">Perfis</div>
+      <div class="profile-list" id="profile-list"></div>
+      <div class="sidebar-bottom"></div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="main">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div
+          style="display: flex; align-items: center; gap: 10px; min-width: 0"
+        >
+          <span class="topbar-title" id="topbar-title">Resume Generator</span>
+          <span
+            class="unsaved-dot"
+            id="unsaved-dot"
+            title="Alterações não salvas"
+          ></span>
+        </div>
+        <div class="topbar-actions" id="topbar-actions" style="display: none">
+          <button class="btn btn-danger" onclick="deleteProfile()">
+            🗑 Excluir
+          </button>
+          <button class="btn btn-ghost" onclick="saveProfile()">
+            💾 Salvar
+          </button>
+        </div>
+        <div class="theme-switch" onclick="toggleTheme()" title="Alternar tema">
+          <span class="theme-switch-label" id="theme-label">☀ Claro</span>
+          <label class="toggle" style="pointer-events: none">
+            <input type="checkbox" id="theme-checkbox" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content" id="content">
+        <!-- Empty state -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">📄</div>
+          <h2>Nenhum perfil selecionado</h2>
+          <p>Crie um novo perfil para começar.</p>
+        </div>
+
+        <!-- Editor -->
+        <div id="editor" style="display: none">
+          <!-- Generate bar -->
+          <div class="generate-bar">
+            <div class="generate-bar-label">
+              Gerar PDF
+              <span>O badge de tempo é recalculado automaticamente</span>
+            </div>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input type="checkbox" id="f-badge" checked />
+                <span class="toggle-track"></span>
+              </label>
+              <span class="toggle-label">Badge de tempo</span>
+            </div>
+            <button
+              class="btn btn-success"
+              id="btn-generate"
+              onclick="generate()"
+            >
+              ⬇ Gerar PDF
+            </button>
+          </div>
+
+          <!-- ── Identificação do perfil ── -->
+          <div class="section-card" id="sc-identity">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">ID</div>
+                <span class="section-title">Identificação do perfil</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span class="section-error-badge" style="display: none"
+                  >campos obrigatórios</span
+                >
+                <div class="chevron open"></div>
+              </div>
+            </div>
+            <div class="section-body open">
+              <div class="grid grid-2">
+                <div class="field">
+                  <label class="field-label"
+                    >Nome do perfil <span class="required">*</span></label
+                  >
+                  <input
+                    id="f-label"
+                    type="text"
+                    placeholder="ex: Gabriel — Pleno, Gabriel — Estágio"
+                  />
+                  <span class="field-error" id="err-label"
+                    >Informe um nome para identificar este perfil</span
+                  >
+                </div>
+                <div class="field">
+                  <label class="field-label">Versão / cargo alvo</label>
+                  <input
+                    id="f-version"
+                    type="text"
+                    placeholder="ex: Pleno, Jr, Estágio"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Informações pessoais ── -->
+          <div class="section-card" id="sc-personal">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">P</div>
+                <span class="section-title">Informações pessoais</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span class="section-error-badge" style="display: none"
+                  >campos obrigatórios</span
+                >
+                <div class="chevron open"></div>
+              </div>
+            </div>
+            <div class="section-body open">
+              <div class="grid grid-2">
+                <div class="field col-span-2">
+                  <label class="field-label"
+                    >Nome completo <span class="required">*</span></label
+                  >
+                  <input
+                    id="f-name"
+                    type="text"
+                    placeholder="Gabriel Leão Da Silva"
+                  />
+                  <span class="field-error" id="err-name"
+                    >Informe o nome completo</span
+                  >
+                </div>
+                <div class="field">
+                  <label class="field-label"
+                    >Localização <span class="required">*</span></label
+                  >
+                  <input
+                    id="f-location"
+                    type="text"
+                    placeholder="São Paulo, SP · 04423-120"
+                  />
+                  <span class="field-error" id="err-location"
+                    >Informe a localização</span
+                  >
+                </div>
+                <div class="field">
+                  <label class="field-label"
+                    >Telefone <span class="required">*</span></label
+                  >
+                  <input
+                    id="f-phone"
+                    type="text"
+                    placeholder="(11) 99999-9999"
+                  />
+                  <span class="field-error" id="err-phone"
+                    >Informe o telefone</span
+                  >
+                </div>
+                <div class="field col-span-2">
+                  <label class="field-label"
+                    >E-mail <span class="required">*</span></label
+                  >
+                  <input
+                    id="f-email"
+                    type="email"
+                    placeholder="voce@email.com"
+                  />
+                  <span class="field-error" id="err-email"
+                    >Informe um e-mail válido</span
+                  >
+                </div>
+                <div class="field">
+                  <label class="field-label">LinkedIn — label</label>
+                  <input
+                    id="f-linkedin-label"
+                    type="text"
+                    placeholder="LinkedIn"
+                    value="LinkedIn"
+                  />
+                </div>
+                <div class="field">
+                  <label class="field-label">LinkedIn — URL</label>
+                  <input
+                    id="f-linkedin-url"
+                    type="text"
+                    placeholder="https://linkedin.com/in/seu-perfil"
+                  />
+                </div>
+                <div class="field">
+                  <label class="field-label">GitHub — label</label>
+                  <input
+                    id="f-github-label"
+                    type="text"
+                    placeholder="GitHub"
+                    value="GitHub"
+                  />
+                </div>
+                <div class="field">
+                  <label class="field-label">GitHub — URL</label>
+                  <input
+                    id="f-github-url"
+                    type="text"
+                    placeholder="https://github.com/seu-usuario"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Resumo ── -->
+          <div class="section-card" id="sc-resumo">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">R</div>
+                <span class="section-title">Resumo Profissional</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span class="section-error-badge" style="display: none"
+                  >campo obrigatório</span
+                >
+                <div class="chevron open"></div>
+              </div>
+            </div>
+            <div class="section-body open">
+              <div class="field">
+                <label class="field-label"
+                  >2–3 frases sobre o que você oferece profissionalmente
+                  <span class="required">*</span></label
+                >
+                <textarea
+                  id="f-resumo"
+                  rows="4"
+                  placeholder="Desenvolvedor Front-end com experiência em..."
+                ></textarea>
+                <span class="field-error" id="err-resumo"
+                  >Informe o resumo profissional</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Experiência ── -->
+          <div class="section-card">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">XP</div>
+                <span class="section-title">Histórico Profissional</span>
+                <span class="section-badge" id="exp-count">0</span>
+              </div>
+              <div class="chevron open"></div>
+            </div>
+            <div class="section-body open">
+              <div id="exp-list"></div>
+              <button class="btn-add-item" onclick="addExperience()">
+                ＋ Adicionar experiência
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Tecnologias ── -->
+          <div class="section-card">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">T</div>
+                <span class="section-title">Tecnologias</span>
+              </div>
+              <div class="chevron open"></div>
+            </div>
+            <div class="section-body open">
+              <div class="simple-list" id="tech-list"></div>
+              <button
+                class="btn-add-item"
+                onclick="addSimple('tech-list', 'Front-end: React, TypeScript')"
+              >
+                ＋ Adicionar linha
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Formação ── -->
+          <div class="section-card">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">Ed</div>
+                <span class="section-title">Formação Acadêmica</span>
+                <span class="section-badge" id="edu-count">0</span>
+              </div>
+              <div class="chevron open"></div>
+            </div>
+            <div class="section-body open">
+              <div id="edu-list"></div>
+              <button class="btn-add-item" onclick="addEducation()">
+                ＋ Adicionar formação
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Habilidades ── -->
+          <div class="section-card">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">Sk</div>
+                <span class="section-title">Habilidades e Competências</span>
+              </div>
+              <div class="chevron open"></div>
+            </div>
+            <div class="section-body open">
+              <div class="simple-list" id="skills-list"></div>
+              <button
+                class="btn-add-item"
+                onclick="addSimple('skills-list', 'Trabalho em equipe')"
+              >
+                ＋ Adicionar habilidade
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Idiomas ── -->
+          <div class="section-card">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">Ln</div>
+                <span class="section-title">Idiomas</span>
+              </div>
+              <div class="chevron open"></div>
+            </div>
+            <div class="section-body open">
+              <div class="simple-list" id="lang-list"></div>
+              <button
+                class="btn-add-item"
+                onclick="addSimple('lang-list', 'Inglês: B2')"
+              >
+                ＋ Adicionar idioma
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Cores ── -->
+          <div class="section-card">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-header-left">
+                <div class="section-icon">Cr</div>
+                <span class="section-title">Cores do PDF</span>
+              </div>
+              <div class="chevron"></div>
+            </div>
+            <div class="section-body">
+              <div class="grid grid-3">
+                <div class="field">
+                  <label class="field-label">Cor de destaque</label>
+                  <div class="color-row">
+                    <input
+                      type="color"
+                      class="color-picker-swatch"
+                      id="f-accent-picker"
+                      value="#1B3A6B"
+                      oninput="syncColor('accent')"
+                    />
+                    <input
+                      type="text"
+                      class="color-hex"
+                      id="f-accent"
+                      value="#1B3A6B"
+                      oninput="syncColorText('accent')"
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="field-label">Texto principal</label>
+                  <div class="color-row">
+                    <input
+                      type="color"
+                      class="color-picker-swatch"
+                      id="f-body-picker"
+                      value="#111111"
+                      oninput="syncColor('body')"
+                    />
+                    <input
+                      type="text"
+                      class="color-hex"
+                      id="f-body"
+                      value="#111111"
+                      oninput="syncColorText('body')"
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="field-label">Texto secundário</label>
+                  <div class="color-row">
+                    <input
+                      type="color"
+                      class="color-picker-swatch"
+                      id="f-muted-picker"
+                      value="#555555"
+                      oninput="syncColor('muted')"
+                    />
+                    <input
+                      type="text"
+                      class="color-hex"
+                      id="f-muted"
+                      value="#555555"
+                      oninput="syncColorText('muted')"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /editor -->
+      </div>
+      <!-- /content -->
+    </div>
+    <!-- /main -->
+
+    <div id="toast"></div>
+
+    <script>
+      // ── State ──────────────────────────────────────────────────────────────────────
+      let profiles = [];
+      let activeId = null;
+      let isDirty = false;
+
+      // ── Boot ───────────────────────────────────────────────────────────────────────
+      const savedTheme = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      updateThemeSwitch(savedTheme);
+
+      fetch("/api/profiles")
+        .then((r) => r.json())
+        .then((data) => {
+          profiles = data;
+          renderSidebar();
+          if (profiles.length > 0) selectProfile(profiles[0].id);
+        });
+
+      // ── Theme ──────────────────────────────────────────────────────────────────────
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+        updateThemeSwitch(next);
+      }
+
+      function updateThemeSwitch(theme) {
+        const label = document.getElementById("theme-label");
+        const checkbox = document.getElementById("theme-checkbox");
+        if (theme === "dark") {
+          label.textContent = "🌙 Escuro";
+          checkbox.checked = true;
+        } else {
+          label.textContent = "☀ Claro";
+          checkbox.checked = false;
+        }
+      }
+
+      // ── Sidebar ────────────────────────────────────────────────────────────────────
+      function renderSidebar() {
+        const el = document.getElementById("profile-list");
+        if (profiles.length === 0) {
+          el.innerHTML = `<div style="padding:12px 10px; font-size:12px; color:var(--text3);">Nenhum perfil ainda</div>`;
+          return;
+        }
+        el.innerHTML = profiles
+          .map(
+            (p) => `
+    <div class="profile-card ${p.id === activeId ? "active" : ""}" onclick="selectProfile('${p.id}')">
+      <div class="profile-card-label">${escHtml(p.label || p.name || "Sem nome")}</div>
+      <div class="profile-card-meta">${escHtml(p.name || "")}${p.version ? ` · ${p.version}` : ""}</div>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      // ── Select / new ───────────────────────────────────────────────────────────────
+      function selectProfile(id) {
+        activeId = id;
+        const p = profiles.find((x) => x.id === id);
+        renderSidebar();
+        loadEditor(p);
+        document.getElementById("topbar-actions").style.display = "flex";
+        setDirty(false);
+      }
+
+      function newProfile() {
+        activeId = null;
+        renderSidebar();
+        loadEditor({
+          label: "",
+          version: "",
+          name: "",
+          location: "",
+          phone: "",
+          email: "",
+          linkedin_label: "LinkedIn",
+          linkedin_url: "",
+          github_label: "GitHub",
+          github_url: "",
+          resumo: "",
+          experience: [],
+          technologies: [],
+          education: [],
+          skills: [],
+          languages: [],
+          theme_accent: "#1B3A6B",
+          theme_body: "#111111",
+          theme_muted: "#555555",
+        });
+        document.getElementById("topbar-actions").style.display = "flex";
+        setDirty(false);
+      }
+
+      // ── Dirty tracking ─────────────────────────────────────────────────────────────
+      function setDirty(val) {
+        isDirty = val;
+        document.getElementById("unsaved-dot").classList.toggle("show", val);
+      }
+      // Mark dirty on any input change inside editor
+      document
+        .getElementById("editor")
+        ?.addEventListener("input", () => setDirty(true));
+
+      // ── Load editor ────────────────────────────────────────────────────────────────
+      function loadEditor(p) {
+        document.getElementById("empty-state").style.display = "none";
+        document.getElementById("editor").style.display = "block";
+        document.getElementById("topbar-title").textContent =
+          p.label || p.name || "Novo Perfil";
+
+        document.getElementById("f-label").value = p.label || "";
+        document.getElementById("f-version").value = p.version || "";
+        document.getElementById("f-name").value = p.name || "";
+        document.getElementById("f-location").value = p.location || "";
+        document.getElementById("f-phone").value = p.phone || "";
+        document.getElementById("f-email").value = p.email || "";
+        document.getElementById("f-linkedin-label").value =
+          p.linkedin_label || "LinkedIn";
+        document.getElementById("f-linkedin-url").value = p.linkedin_url || "";
+        document.getElementById("f-github-label").value =
+          p.github_label || "GitHub";
+        document.getElementById("f-github-url").value = p.github_url || "";
+        document.getElementById("f-resumo").value = p.resumo || "";
+        document.getElementById("f-accent").value = p.theme_accent || "#1B3A6B";
+        document.getElementById("f-accent-picker").value =
+          p.theme_accent || "#1B3A6B";
+        document.getElementById("f-body").value = p.theme_body || "#111111";
+        document.getElementById("f-body-picker").value =
+          p.theme_body || "#111111";
+        document.getElementById("f-muted").value = p.theme_muted || "#555555";
+        document.getElementById("f-muted-picker").value =
+          p.theme_muted || "#555555";
+
+        clearAllErrors();
+
+        document.getElementById("exp-list").innerHTML = "";
+        (p.experience || []).forEach(addExperience);
+
+        document.getElementById("edu-list").innerHTML = "";
+        (p.education || []).forEach(addEducation);
+
+        renderSimpleList("tech-list", p.technologies || []);
+        renderSimpleList("skills-list", p.skills || []);
+        renderSimpleList("lang-list", p.languages || []);
+
+        updateCount("exp-count", (p.experience || []).length);
+        updateCount("edu-count", (p.education || []).length);
+      }
+
+      // ── Experience ────────────────────────────────────────────────────────────────
+      function addExperience(data = {}) {
+        const el = document.createElement("div");
+        el.className = "repeat-item";
+        const idx =
+          document.querySelectorAll("#exp-list .repeat-item").length + 1;
+        el.innerHTML = `
+    <div class="repeat-item-header">
+      <span class="repeat-item-num">Exp ${idx}</span>
+      <button class="btn-remove-item" onclick="removeRepeat(this, 'exp-list', 'exp-count')">✕ remover</button>
+    </div>
+    <div class="grid grid-2">
+      <div class="field">
+        <label class="field-label">Cargo</label>
+        <input class="exp-title" type="text" value="${escAttr(data.title || "")}" placeholder="Desenvolvedor Front-end">
+      </div>
+      <div class="field">
+        <label class="field-label">Empresa</label>
+        <input class="exp-company" type="text" value="${escAttr(data.company || "")}" placeholder="Matrix Energia">
+      </div>
+      <div class="field">
+        <label class="field-label">Localização</label>
+        <input class="exp-location" type="text" value="${escAttr(data.location || "")}" placeholder="São Paulo, SP">
+      </div>
+      <div class="field">
+        <label class="field-label">Data início <span style="font-family:var(--font-mono);font-size:10px;">(MM/AAAA)</span></label>
+        <input class="exp-start" type="text" value="${escAttr(data.start_date || "")}" placeholder="08/2024">
+      </div>
+      <div class="field col-span-2">
+        <label class="field-label">Data fim <span style="font-family:var(--font-mono);font-size:10px;">(MM/AAAA — deixe vazio se ainda trabalha aqui)</span></label>
+        <input class="exp-end" type="text" value="${escAttr(data.end_date || "")}" placeholder="01/2024">
+      </div>
+      <div class="field col-span-2">
+        <label class="field-label">Bullet points</label>
+        <div class="bullet-list" data-bullets></div>
+        <button class="btn-add-item" style="margin-top:4px" onclick="addBullet(this)">＋ Adicionar bullet</button>
+      </div>
+    </div>
+  `;
+        document.getElementById("exp-list").appendChild(el);
+        const bulletList = el.querySelector("[data-bullets]");
+        (data.bullets || []).forEach((b) => addBulletTo(bulletList, b));
+        if (!(data.bullets || []).length) addBulletTo(bulletList, "");
+        updateCount(
+          "exp-count",
+          document.querySelectorAll("#exp-list .repeat-item").length,
+        );
+      }
+
+      function addBullet(btn) {
+        const list = btn.previousElementSibling;
+        addBulletTo(list, "");
+      }
+
+      function addBulletTo(list, value) {
+        const row = document.createElement("div");
+        row.className = "bullet-row";
+        row.innerHTML = `
+    <input type="text" value="${escAttr(value)}" placeholder="O que você fez e qual foi o impacto...">
+    <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>
+  `;
+        list.appendChild(row);
+      }
+
+      // ── Education ─────────────────────────────────────────────────────────────────
+      function addEducation(data = {}) {
+        const el = document.createElement("div");
+        el.className = "repeat-item";
+        const idx =
+          document.querySelectorAll("#edu-list .repeat-item").length + 1;
+        el.innerHTML = `
+    <div class="repeat-item-header">
+      <span class="repeat-item-num">Edu ${idx}</span>
+      <button class="btn-remove-item" onclick="removeRepeat(this, 'edu-list', 'edu-count')">✕ remover</button>
+    </div>
+    <div class="grid grid-2">
+      <div class="field">
+        <label class="field-label">Período <span style="font-family:var(--font-mono);font-size:10px;">(ex: 07/2023 - 07/2027)</span></label>
+        <input class="edu-dates" type="text" value="${escAttr(data.dates || "")}" placeholder="07/2023 - 07/2027">
+      </div>
+      <div class="field">
+        <label class="field-label">Status</label>
+        <select class="edu-status">
+          <option ${data.status === "Cursando" ? "selected" : ""}>Cursando</option>
+          <option ${data.status === "Concluído" ? "selected" : ""}>Concluído</option>
+          <option ${data.status === "Trancado" ? "selected" : ""}>Trancado</option>
+        </select>
+      </div>
+      <div class="field col-span-2">
+        <label class="field-label">Grau e curso</label>
+        <input class="edu-degree" type="text" value="${escAttr(data.degree || "")}" placeholder="Bacharelado em Engenharia de Software">
+      </div>
+      <div class="field col-span-2">
+        <label class="field-label">Instituição · Cidade</label>
+        <input class="edu-institution" type="text" value="${escAttr(data.institution || "")}" placeholder="FIAP · São Paulo">
+      </div>
+    </div>
+  `;
+        document.getElementById("edu-list").appendChild(el);
+        updateCount(
+          "edu-count",
+          document.querySelectorAll("#edu-list .repeat-item").length,
+        );
+      }
+
+      function removeRepeat(btn, listId, countId) {
+        btn.closest(".repeat-item").remove();
+        updateCount(
+          countId,
+          document.querySelectorAll(`#${listId} .repeat-item`).length,
+        );
+      }
+
+      // ── Simple lists ──────────────────────────────────────────────────────────────
+      function renderSimpleList(listId, items) {
+        document.getElementById(listId).innerHTML = "";
+        items.forEach((v) => addSimple(listId, v));
+      }
+      function addSimple(listId, value = "") {
+        const row = document.createElement("div");
+        row.className = "simple-row";
+        row.innerHTML = `
+    <input type="text" value="${escAttr(value)}" placeholder="...">
+    <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>
+  `;
+        document.getElementById(listId).appendChild(row);
+      }
+      function getSimpleList(id) {
+        return [...document.querySelectorAll(`#${id} input`)]
+          .map((i) => i.value.trim())
+          .filter(Boolean);
+      }
+
+      // ── Validation ────────────────────────────────────────────────────────────────
+      function validate() {
+        let valid = true;
+
+        const required = [
+          { id: "f-label", err: "err-label", card: "sc-identity" },
+          { id: "f-name", err: "err-name", card: "sc-personal" },
+          { id: "f-location", err: "err-location", card: "sc-personal" },
+          { id: "f-phone", err: "err-phone", card: "sc-personal" },
+          { id: "f-email", err: "err-email", card: "sc-personal" },
+          { id: "f-resumo", err: "err-resumo", card: "sc-resumo" },
+        ];
+
+        clearAllErrors();
+
+        required.forEach(({ id, err, card }) => {
+          const input = document.getElementById(id);
+          const val = input.value.trim();
+          let msg = "";
+
+          if (!val) {
+            msg = "Campo obrigatório";
+          } else if (
+            id === "f-email" &&
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
+          ) {
+            msg = "E-mail inválido";
+          }
+
+          if (msg) {
+            input.classList.add("error");
+            const errEl = document.getElementById(err);
+            errEl.textContent = msg;
+            errEl.classList.add("show");
+            // open card and show error badge
+            const cardEl = document.getElementById(card);
+            const body = cardEl.querySelector(".section-body");
+            const chev = cardEl.querySelector(".chevron");
+            const badge = cardEl.querySelector(".section-error-badge");
+            body.classList.add("open");
+            chev.classList.add("open");
+            badge.style.display = "inline";
+            cardEl.classList.add("has-error");
+            valid = false;
+          }
+        });
+
+        return valid;
+      }
+
+      function clearAllErrors() {
+        document
+          .querySelectorAll(".field input, .field textarea")
+          .forEach((el) => el.classList.remove("error"));
+        document.querySelectorAll(".field-error").forEach((el) => {
+          el.classList.remove("show");
+          el.textContent = "";
+        });
+        document
+          .querySelectorAll(".section-error-badge")
+          .forEach((el) => (el.style.display = "none"));
+        document
+          .querySelectorAll(".section-card")
+          .forEach((el) => el.classList.remove("has-error"));
+      }
+
+      // Clear errors on input
+      document.addEventListener("input", (e) => {
+        if (e.target.matches(".field input, .field textarea")) {
+          e.target.classList.remove("error");
+          const field = e.target.closest(".field");
+          if (field) {
+            field.querySelector(".field-error")?.classList.remove("show");
+          }
+        }
+      });
+
+      // ── Collect ───────────────────────────────────────────────────────────────────
+      function collectProfile() {
+        const experience = [
+          ...document.querySelectorAll("#exp-list .repeat-item"),
+        ].map((el) => ({
+          title: el.querySelector(".exp-title").value.trim(),
+          company: el.querySelector(".exp-company").value.trim(),
+          location: el.querySelector(".exp-location").value.trim(),
+          start_date: el.querySelector(".exp-start").value.trim(),
+          end_date: el.querySelector(".exp-end").value.trim() || null,
+          bullets: [...el.querySelectorAll("[data-bullets] input")]
+            .map((i) => i.value.trim())
+            .filter(Boolean),
+        }));
+
+        const education = [
+          ...document.querySelectorAll("#edu-list .repeat-item"),
+        ].map((el) => ({
+          dates: el.querySelector(".edu-dates").value.trim(),
+          degree: el.querySelector(".edu-degree").value.trim(),
+          institution: el.querySelector(".edu-institution").value.trim(),
+          status: el.querySelector(".edu-status").value,
+        }));
+
+        return {
+          id: activeId,
+          label: document.getElementById("f-label").value.trim(),
+          version: document.getElementById("f-version").value.trim(),
+          name: document.getElementById("f-name").value.trim(),
+          location: document.getElementById("f-location").value.trim(),
+          phone: document.getElementById("f-phone").value.trim(),
+          email: document.getElementById("f-email").value.trim(),
+          linkedin_label: document
+            .getElementById("f-linkedin-label")
+            .value.trim(),
+          linkedin_url: document.getElementById("f-linkedin-url").value.trim(),
+          github_label: document.getElementById("f-github-label").value.trim(),
+          github_url: document.getElementById("f-github-url").value.trim(),
+          resumo: document.getElementById("f-resumo").value.trim(),
+          experience,
+          education,
+          technologies: getSimpleList("tech-list"),
+          skills: getSimpleList("skills-list"),
+          languages: getSimpleList("lang-list"),
+          theme_accent: document.getElementById("f-accent").value.trim(),
+          theme_body: document.getElementById("f-body").value.trim(),
+          theme_muted: document.getElementById("f-muted").value.trim(),
+        };
+      }
+
+      // ── Save ──────────────────────────────────────────────────────────────────────
+      function saveProfile() {
+        if (!validate()) {
+          toast("Corrija os campos obrigatórios", "error");
+          return;
+        }
+        const profile = collectProfile();
+        fetch("/api/profiles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profile),
+        })
+          .then((r) => r.json())
+          .then((res) => {
+            activeId = res.id;
+            return fetch("/api/profiles").then((r) => r.json());
+          })
+          .then((data) => {
+            profiles = data;
+            renderSidebar();
+            document.getElementById("topbar-title").textContent =
+              collectProfile().label || "Sem nome";
+            setDirty(false);
+            toast("Perfil salvo!", "success");
+          });
+      }
+
+      // ── Delete ────────────────────────────────────────────────────────────────────
+      function deleteProfile() {
+        if (!activeId && !confirm("Descartar este perfil?")) return;
+        const doDelete = () => {
+          const url = activeId ? `/api/profiles/${activeId}` : null;
+          if (!url) {
+            resetToEmpty();
+            return;
+          }
+          fetch(url, { method: "DELETE" })
+            .then(() => fetch("/api/profiles").then((r) => r.json()))
+            .then((data) => {
+              profiles = data;
+              activeId = null;
+              renderSidebar();
+              resetToEmpty();
+              toast("Perfil excluído");
+            });
+        };
+        if (activeId) {
+          if (confirm("Excluir este perfil permanentemente?")) doDelete();
+        } else {
+          doDelete();
+        }
+      }
+
+      function resetToEmpty() {
+        document.getElementById("editor").style.display = "none";
+        document.getElementById("empty-state").style.display = "flex";
+        document.getElementById("topbar-actions").style.display = "none";
+        document.getElementById("topbar-title").textContent =
+          "Resume Generator";
+        setDirty(false);
+      }
+
+      // ── Generate ──────────────────────────────────────────────────────────────────
+      function generate() {
+        if (!validate()) {
+          toast("Corrija os campos obrigatórios antes de gerar", "error");
+          return;
+        }
+        const profile = collectProfile();
+        const show_badge = document.getElementById("f-badge").checked;
+        const btn = document.getElementById("btn-generate");
+        btn.disabled = true;
+        btn.textContent = "Gerando...";
+        toast("Gerando PDF...", "info");
+
+        fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile, show_badge }),
+        })
+          .then((r) => r.json())
+          .then((res) => {
+            btn.disabled = false;
+            btn.textContent = "⬇ Gerar PDF";
+            if (res.ok) {
+              toast("PDF gerado! Baixando...", "success");
+              window.location = `/api/download/${res.file}`;
+            } else {
+              toast("Erro: " + res.error, "error");
+            }
+          })
+          .catch(() => {
+            btn.disabled = false;
+            btn.textContent = "⬇ Gerar PDF";
+            toast("Erro ao gerar PDF", "error");
+          });
+      }
+
+      // ── UI helpers ────────────────────────────────────────────────────────────────
+      function toggleSection(header) {
+        const body = header.nextElementSibling;
+        const chev = header.querySelector(".chevron");
+        body.classList.toggle("open");
+        chev.classList.toggle("open");
+      }
+
+      function updateCount(id, n) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = n;
+      }
+
+      function syncColor(key) {
+        document.getElementById(`f-${key}`).value = document.getElementById(
+          `f-${key}-picker`,
+        ).value;
+      }
+      function syncColorText(key) {
+        const val = document.getElementById(`f-${key}`).value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(val))
+          document.getElementById(`f-${key}-picker`).value = val;
+      }
+
+      let toastTimer;
+      function toast(msg, type = "info") {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.className = `show ${type}`;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => (el.className = ""), 3000);
+      }
+
+      function escHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function escAttr(s) {
+        return escHtml(s);
+      }
+    </script>
+  </body>
+</html>
