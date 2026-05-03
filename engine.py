@@ -5,14 +5,17 @@ PDF generation engine — called by app.py, not run directly.
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+    HRFlowable, KeepTogether
+)
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.platypus import Flowable
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from datetime import date
-import os
+import os, re
 
 # ── Font registration ──────────────────────────────────────────────────────────
 
@@ -32,16 +35,110 @@ def _find_font(name):
         "Download Inter from https://rsms.me/inter/ and put the .ttf files in fonts/"
     )
 
+_registered_fonts: dict = {}   # cache: family_name → (R, RB, RI) internal names
 _fonts_registered = False
 
-def ensure_fonts():
+def _register_family(family: str) -> tuple[str, str, str]:
+    """
+    Register a font family for ReportLab and return the three internal names
+    (regular, bold, italic). Caches registrations so we don't re-register.
+    """
+    if family in _registered_fonts:
+        return _registered_fonts[family]
+
+    slug = re.sub(r"[^a-zA-Z0-9]", "_", family)
+    r_name  = f"{slug}_R"
+    rb_name = f"{slug}_RB"
+    ri_name = f"{slug}_RI"
+
+    try:
+        # Try local fonts/ folder first
+        variants = _find_font_variants_local(family)
+        if not variants:
+            variants = _find_font_variants_system(family)
+        if not variants:
+            raise FileNotFoundError(f"Font '{family}' not found")
+
+        pdfmetrics.registerFont(TTFont(r_name,  variants["regular"]))
+        pdfmetrics.registerFont(TTFont(rb_name, variants["bold"]))
+        pdfmetrics.registerFont(TTFont(ri_name, variants["italic"]))
+    except Exception:
+        # Fall back to default fonts
+        return _get_default_fonts()
+
+    _registered_fonts[family] = (r_name, rb_name, ri_name)
+    return r_name, rb_name, ri_name
+
+
+def _find_font_variants_local(family: str) -> dict | None:
+    """Look for Regular/Bold/Italic files in fonts/ folder matching the family."""
+    if not os.path.isdir("fonts"):
+        return None
+    slug = family.replace(" ", "").replace("-", "")
+    files = {f.lower(): f for f in os.listdir("fonts") if f.endswith((".ttf", ".otf"))}
+    result = {}
+    for variant, keywords in {
+        "regular": [f"{slug.lower()}-regular", f"{slug.lower()}_regular", f"{slug.lower()}regular",
+                    f"{slug.lower()}-400",     f"{slug.lower()}"],
+        "bold":    [f"{slug.lower()}-bold",    f"{slug.lower()}_bold",    f"{slug.lower()}bold",
+                    f"{slug.lower()}-700"],
+        "italic":  [f"{slug.lower()}-italic",  f"{slug.lower()}_italic",  f"{slug.lower()}italic",
+                    f"{slug.lower()}-regularitalic", f"{slug.lower()}-400italic"],
+    }.items():
+        for kw in keywords:
+            for fname_lower, fname in files.items():
+                base = os.path.splitext(fname_lower)[0]
+                if base == kw or base.startswith(kw):
+                    result[variant] = os.path.join("fonts", fname)
+                    break
+            if variant in result:
+                break
+    if len(result) < 3:
+        return None
+    return result
+
+
+def _find_font_variants_system(family: str) -> dict | None:
+    """Use fc-match to find Regular/Bold/Italic system font files."""
+    import subprocess
+    result = {}
+    for variant, fc_style in {
+        "regular": "Regular",
+        "bold":    "Bold",
+        "italic":  "Italic",
+    }.items():
+        try:
+            out = subprocess.check_output(
+                ["fc-match", f"{family}:style={fc_style}", "--format=%{file}"],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            if out and (out.endswith(".ttf") or out.endswith(".otf")):
+                # Verify it's actually the requested family (fc-match falls back)
+                verify = subprocess.check_output(
+                    ["fc-match", f"{family}:style={fc_style}", "--format=%{family}"],
+                    text=True, stderr=subprocess.DEVNULL
+                ).strip().split(",")[0].strip().lower()
+                if family.lower() in verify or verify in family.lower():
+                    result[variant] = out
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            pass
+    return result if len(result) == 3 else None
+
+
+def _get_default_fonts() -> tuple[str, str, str]:
+    """Register and return the default Liberation Sans / Inter fonts."""
     global _fonts_registered
-    if _fonts_registered:
-        return
-    pdfmetrics.registerFont(TTFont("R",  _find_font("Inter-Regular.ttf")  if os.path.exists("fonts/Inter-Regular.ttf")  else _find_font("LiberationSans-Regular.ttf")))
-    pdfmetrics.registerFont(TTFont("RB", _find_font("Inter-Bold.ttf")     if os.path.exists("fonts/Inter-Bold.ttf")     else _find_font("LiberationSans-Bold.ttf")))
-    pdfmetrics.registerFont(TTFont("RI", _find_font("Inter-Italic.ttf")   if os.path.exists("fonts/Inter-Italic.ttf")   else _find_font("LiberationSans-Italic.ttf")))
-    _fonts_registered = True
+    if not _fonts_registered:
+        use_inter = os.path.exists("fonts/Inter-Regular.ttf")
+        pdfmetrics.registerFont(TTFont("R",  _find_font("Inter-Regular.ttf")  if use_inter else _find_font("LiberationSans-Regular.ttf")))
+        pdfmetrics.registerFont(TTFont("RB", _find_font("Inter-Bold.ttf")     if use_inter else _find_font("LiberationSans-Bold.ttf")))
+        pdfmetrics.registerFont(TTFont("RI", _find_font("Inter-Italic.ttf")   if use_inter else _find_font("LiberationSans-Italic.ttf")))
+        _fonts_registered = True
+    return "R", "RB", "RI"
+
+
+def ensure_fonts():
+    _get_default_fonts()
 
 # ── Duration calculator ────────────────────────────────────────────────────────
 
@@ -62,45 +159,56 @@ def calc_duration(start_str, end_str=None):
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 
+# How many items to keep with the section header before allowing breaks
+KEEP_WITH_HEADER = 2
+
 def build(data, output_path, show_badge=True):
-    """
-    data: dict with resume fields (from data.json profile)
-    output_path: where to save the PDF
-    show_badge: whether to show the duration badge
-    """
     ensure_fonts()
 
+    # ── Font ──────────────────────────────────────────────────────────────────
+    family = data.get("font_family", "").strip()
+    if family:
+        FR, FRB, FRI = _register_family(family)
+    else:
+        FR, FRB, FRI = _get_default_fonts()
+
+    # ── Colors ────────────────────────────────────────────────────────────────
     ACCENT = colors.HexColor(data.get("theme_accent", "#1B3A6B"))
     BODY   = colors.HexColor(data.get("theme_body",   "#111111"))
     MUTED  = colors.HexColor(data.get("theme_muted",  "#555555"))
     WHITE  = colors.white
 
+    # ── Sizes — defaults match previous behaviour ─────────────────────────────
+    # font_size kept for backwards compat; font_size_body overrides it
+    FS_BODY  = float(data.get("font_size_body",  data.get("font_size", 9)))
+    FS_TITLE = float(data.get("font_size_title", FS_BODY * 2.4))   # default: name ~21.6pt at 9pt body
+
     PAGE_W, _ = letter
     MX     = 0.55 * inch
     MY     = 0.50 * inch
     CW     = PAGE_W - 2 * MX
-    FS     = 9
     INDENT = 0.30 * inch
+    FS     = FS_BODY   # shorthand used in spacers / badge
 
     def s(name, **kw):
-        d = dict(fontName="R", fontSize=FS, textColor=BODY, leading=FS * 1.4,
+        d = dict(fontName=FR, fontSize=FS_BODY, textColor=BODY, leading=FS_BODY * 1.45,
                  spaceAfter=0, spaceBefore=0, alignment=TA_LEFT)
         d.update(kw)
         return ParagraphStyle(name, **d)
 
     ST = {
-        "name":     s("name",  fontName="RB", fontSize=22, textColor=ACCENT,
-                      alignment=TA_CENTER, leading=28, spaceAfter=3),
-        "contact":  s("con",   fontSize=8.5, textColor=MUTED, alignment=TA_CENTER, leading=13),
-        "links":    s("lnk",   fontSize=8.5, textColor=ACCENT, alignment=TA_CENTER, leading=13),
-        "section":  s("sec",   fontName="RB", fontSize=9.5, textColor=ACCENT, spaceBefore=2, spaceAfter=2),
-        "body":     s("body",  leading=13, alignment=TA_JUSTIFY),
-        "bold":     s("bold",  fontName="RB"),
-        "jobtitle": s("jt",    fontName="RB", fontSize=9.5),
-        "company":  s("co",    fontName="RI", fontSize=8.5, textColor=MUTED),
-        "date":     s("dt",    fontSize=8, textColor=MUTED, leading=12),
-        "bullet":   s("bul",   leading=13, leftIndent=10, alignment=TA_JUSTIFY),
-        "status":   s("sts",   fontName="RI", fontSize=8.5, textColor=MUTED),
+        "name":     s("name",  fontName=FRB, fontSize=FS_TITLE, textColor=ACCENT,
+                      alignment=TA_CENTER, leading=FS_TITLE * 1.3, spaceAfter=3),
+        "contact":  s("con",   fontSize=FS_BODY * 0.94, textColor=MUTED, alignment=TA_CENTER, leading=FS_BODY * 1.45),
+        "links":    s("lnk",   fontSize=FS_BODY * 0.94, textColor=ACCENT, alignment=TA_CENTER, leading=FS_BODY * 1.45),
+        "section":  s("sec",   fontName=FRB, fontSize=FS_BODY * 1.05, textColor=ACCENT, spaceBefore=2, spaceAfter=2),
+        "body":     s("body",  leading=FS_BODY * 1.45, alignment=TA_JUSTIFY),
+        "bold":     s("bold",  fontName=FRB),
+        "jobtitle": s("jt",    fontName=FRB, fontSize=FS_BODY * 1.05),
+        "company":  s("co",    fontName=FRI, fontSize=FS_BODY * 0.94, textColor=MUTED),
+        "date":     s("dt",    fontSize=FS_BODY * 0.88, textColor=MUTED, leading=FS_BODY * 1.35),
+        "bullet":   s("bul",   leading=FS_BODY * 1.45, leftIndent=10, alignment=TA_JUSTIFY),
+        "status":   s("sts",   fontName=FRI, fontSize=FS_BODY * 0.94, textColor=MUTED),
     }
 
     NO_STYLE = TableStyle([
@@ -132,21 +240,25 @@ def build(data, output_path, show_badge=True):
         RADIUS = 3
         PY = 4
         WIDTH = 1.15 * inch
-        FS = 7.5
-        def __init__(self, text):
+
+        def __init__(self, text, fs=7.5):
             super().__init__()
             self._text = text
+            self._fs   = fs
+            self._font = FRB
             self.hAlign = "LEFT"
+
         def wrap(self, aw, ah):
-            self._h = self.FS + 2 * self.PY
+            self._h = self._fs + 2 * self.PY
             return self.WIDTH, self._h
+
         def draw(self):
             c = self.canv
             c.saveState()
             c.setFillColor(ACCENT)
             c.roundRect(0, 0, self.WIDTH, self._h, self.RADIUS, stroke=0, fill=1)
             c.setFillColor(WHITE)
-            c.setFont("RB", self.FS)
+            c.setFont(self._font, self._fs)
             c.drawCentredString(self.WIDTH / 2, self.PY + 0.5, self._text)
             c.restoreState()
 
@@ -156,12 +268,64 @@ def build(data, output_path, show_badge=True):
     def bul(text):
         return Paragraph(f"• {text}", ST["bullet"])
 
-    # ── Story ────────────────────────────────────────────────
-    story = []
+    def job_row(job):
+        """Build the two-column row for a single job."""
+        duration  = calc_duration(job["start_date"], job.get("end_date") or None)
+        end_label = "Atual" if not job.get("end_date") else job["end_date"]
+        JL        = 1.3 * inch
+        left_col  = [Badge(duration, FS * 0.83), sp(3), date_para(f'{job["start_date"]} - {end_label}')] \
+                    if show_badge else [date_para(f'{job["start_date"]} - {end_label}')]
+        row = Table([[
+            left_col,
+            [Paragraph(job["title"], ST["jobtitle"]),
+             Paragraph(f'{job["company"]} · {job["location"]}', ST["company"]),
+             sp(3),
+             *[bul(b) for b in job["bullets"]]]
+        ]], colWidths=[JL, CW - INDENT - JL])
+        row.setStyle(NO_STYLE)
+        return iblock(row)
 
-    # Header
+    def edu_row(edu):
+        EL  = 1.3 * inch
+        row = Table([[
+            [Paragraph(edu["dates"], ST["date"])],
+            [Paragraph(edu["degree"], ST["bold"]),
+             Paragraph(edu["institution"], ST["company"]),
+             Paragraph(f'Status · {edu["status"]}', ST["status"])]
+        ]], colWidths=[EL, CW - INDENT - EL])
+        row.setStyle(NO_STYLE)
+        return iblock(row)
+
+    # ── Smart KeepTogether helper ────────────────────────────────────────────
+    def section_blocks(header_el, items, spacer_between=6, trailing_spacer=5):
+        """
+        Returns a list of flowables for a section, applying KeepTogether
+        so the header always stays with at least KEEP_WITH_HEADER items.
+        Items beyond that threshold may flow freely across pages.
+        """
+        if not items:
+            return [header_el, sp(trailing_spacer), divider()]
+
+        flowables = []
+        # First group: header + first N items always together
+        anchor = [header_el]
+        for item in items[:KEEP_WITH_HEADER]:
+            anchor.append(item)
+        flowables.append(KeepTogether(anchor))
+
+        # Remaining items: each wrapped in KeepTogether to avoid splitting mid-item
+        for item in items[KEEP_WITH_HEADER:]:
+            flowables.append(KeepTogether([sp(spacer_between), item]))
+
+        flowables += [sp(trailing_spacer), divider()]
+        return flowables
+
+    # ── Story ────────────────────────────────────────────────────────────────
+    story = []
     accent_hex = data.get("theme_accent", "#1B3A6B")
-    story += [
+
+    # Header — always kept together
+    story.append(KeepTogether([
         Paragraph(data["name"], ST["name"]),
         sp(2),
         Paragraph(data["location"], ST["contact"]),
@@ -173,60 +337,31 @@ def build(data, output_path, show_badge=True):
             ST["links"]
         ),
         sp(5), divider(),
-    ]
+    ]))
 
-    # Resumo
-    story += [
+    # Resumo — always together
+    story.append(KeepTogether([
         hdr("Resumo Profissional"),
         iblock(Paragraph(data["resumo"], ST["body"])),
         sp(5), divider(),
-    ]
+    ]))
 
     # Experiência
-    story.append(hdr("Histórico Profissional"))
-    for i, job in enumerate(data["experience"]):
-        if i > 0:
-            story.append(sp(6))
-        duration  = calc_duration(job["start_date"], job.get("end_date") or None)
-        end_label = "Atual" if not job.get("end_date") else job["end_date"]
-        JL = 1.3 * inch
-        left_col = [Badge(duration), sp(3), date_para(f'{job["start_date"]} - {end_label}')] if show_badge \
-               else [date_para(f'{job["start_date"]} - {end_label}')]
-        row = Table([[
-            left_col,
-            [Paragraph(job["title"], ST["jobtitle"]),
-             Paragraph(f'{job["company"]} · {job["location"]}', ST["company"]),
-             sp(3),
-             *[bul(b) for b in job["bullets"]]]
-        ]], colWidths=[JL, CW - INDENT - JL])
-        row.setStyle(NO_STYLE)
-        story.append(iblock(row))
-    story += [sp(5), divider()]
+    exp_items = [job_row(job) for job in data["experience"]]
+    story += section_blocks(hdr("Histórico Profissional"), exp_items, spacer_between=6)
 
-    # Tecnologias
-    story += [
+    # Tecnologias — short list, always together
+    story.append(KeepTogether([
         hdr("Tecnologias"),
         iblock([bul(t) for t in data["technologies"]]),
         sp(5), divider(),
-    ]
+    ]))
 
     # Formação
-    story.append(hdr("Formação Acadêmica"))
-    for i, edu in enumerate(data["education"]):
-        if i > 0:
-            story.append(sp(4))
-        EL = 1.3 * inch
-        row = Table([[
-            [Paragraph(edu["dates"], ST["date"])],
-            [Paragraph(edu["degree"], ST["bold"]),
-             Paragraph(edu["institution"], ST["company"]),
-             Paragraph(f'Status · {edu["status"]}', ST["status"])]
-        ]], colWidths=[EL, CW - INDENT - EL])
-        row.setStyle(NO_STYLE)
-        story.append(iblock(row))
-    story += [sp(5), divider()]
+    edu_items = [edu_row(edu) for edu in data["education"]]
+    story += section_blocks(hdr("Formação Acadêmica"), edu_items, spacer_between=4)
 
-    # Habilidades
+    # Habilidades — always together
     half  = len(data["skills"]) // 2 + len(data["skills"]) % 2
     inner = Table(
         [[[bul(s) for s in data["skills"][:half]],
@@ -234,13 +369,17 @@ def build(data, output_path, show_badge=True):
         colWidths=[(CW - INDENT) / 2, (CW - INDENT) / 2]
     )
     inner.setStyle(NO_STYLE)
-    story += [hdr("Habilidades e Competências"), iblock(inner), sp(5), divider()]
+    story.append(KeepTogether([
+        hdr("Habilidades e Competências"),
+        iblock(inner),
+        sp(5), divider(),
+    ]))
 
-    # Idiomas
-    story += [
+    # Idiomas — always together
+    story.append(KeepTogether([
         hdr("Idiomas"),
         iblock([Paragraph(l, ST["body"]) for l in data["languages"]]),
-    ]
+    ]))
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     doc = SimpleDocTemplate(output_path, pagesize=letter,

@@ -9,7 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
     <aside class="sidebar">
@@ -337,16 +337,67 @@
               </div>
             </div>
 
-            <!-- Cores -->
+            <!-- Aparência -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
-                  <div class="section-icon">Cr</div>
-                  <span class="section-title">Cores do PDF</span>
+                  <div class="section-icon">Ap</div>
+                  <span class="section-title">Aparência do PDF</span>
                 </div>
                 <div class="chevron"></div>
               </div>
               <div class="section-body">
+                <!-- Font family -->
+                <div class="field" style="margin-bottom: 14px">
+                  <label class="field-label">Fonte</label>
+                  <div class="font-select-wrap">
+                    <select
+                      id="f-font-family"
+                      class="field"
+                      style="width: 100%"
+                    >
+                      <option value="">Padrão (Inter / Liberation Sans)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Font sizes -->
+                <div class="grid grid-2" style="margin-bottom: 14px">
+                  <div class="field">
+                    <label class="field-label">Tamanho — texto geral</label>
+                    <div class="font-row">
+                      <input
+                        type="range"
+                        class="font-slider"
+                        id="f-fs-body"
+                        min="7"
+                        max="12"
+                        step="0.5"
+                        value="9"
+                        oninput="syncFontSize('body')"
+                      />
+                      <span class="font-val" id="f-fs-body-val">9pt</span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Tamanho — nome / título</label>
+                    <div class="font-row">
+                      <input
+                        type="range"
+                        class="font-slider"
+                        id="f-fs-title"
+                        min="14"
+                        max="32"
+                        step="1"
+                        value="22"
+                        oninput="syncFontSize('title')"
+                      />
+                      <span class="font-val" id="f-fs-title-val">22pt</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Colors -->
                 <div class="grid grid-3">
                   <div class="field">
                     <label class="field-label">Cor de destaque</label>

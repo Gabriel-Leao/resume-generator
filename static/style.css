@@ -19,6 +19,7 @@
   --text3: #5a6e8c;
   --accent: #5b8def;
   --accent-dim: #172040;
+  --toggle-on: #5b8def; /* always vibrant blue, even in light mode */
   --green: #34c98b;
   --green-dim: #0c2a1f;
   --red: #f05c62;
@@ -48,6 +49,7 @@
   --text3: #6b85a0;
   --accent: #1b3a6b;
   --accent-dim: #dde6f5;
+  --toggle-on: #5b8def; /* keep vibrant blue in light mode too */
   --green: #0d7a52;
   --green-dim: #d6f0e6;
   --red: #c0272d;
@@ -395,10 +397,10 @@ body {
   align-items: center;
 }
 .preview-panel.open {
-  width: 460px;
+  width: 380px;
   border-left: 1px solid var(--border);
   overflow-y: auto;
-  padding: 20px 16px 40px;
+  padding: 16px 12px 40px;
 }
 .preview-panel::-webkit-scrollbar {
   width: 4px;
@@ -414,27 +416,34 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text3);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   align-self: flex-start;
 }
 
-/* A4 paper scaled to fit the panel (~460px panel → ~420px paper width)  */
-/* Real A4 ratio is 1:1.414 → at 420px wide, height ≈ 594px              */
+/*
+  Paper preview: we use zoom to scale the paper down.
+  zoom: 0.636 means 560px * 0.636 = 356px rendered width — fits the panel.
+  zoom correctly affects layout flow (unlike transform: scale).
+  Firefox fallback: transform + manual height calculation.
+*/
 .paper-wrap {
-  width: 100%;
+  width: 356px;
+  flex-shrink: 0;
 }
 .paper {
-  width: 420px;
-  min-height: 594px;
+  width: 560px;
+  min-height: 792px;
   background: #fff;
   color: #111;
-  padding: 28px 34px;
+  padding: 36px 44px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
+  border-radius: 2px;
   font-family: "Instrument Sans", sans-serif;
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.45;
-  position: relative;
+  zoom: 0.636;
+  /* Firefox fallback */
+  transform-origin: top left;
 }
 [data-theme="light"] .paper {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
@@ -448,24 +457,24 @@ body {
 
 .p-name {
   font-family: var(--font-head);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--pac);
   text-align: center;
   letter-spacing: -0.01em;
   line-height: 1.2;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 .p-contact {
-  font-size: 7.5px;
+  font-size: 8.5px;
   color: var(--pmuted);
   text-align: center;
   line-height: 1.5;
 }
 .p-links {
-  font-size: 7.5px;
+  font-size: 8.5px;
   text-align: center;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 .p-links a {
   color: var(--pac);
@@ -474,23 +483,23 @@ body {
 .p-divider {
   border: none;
   border-top: 1px dashed #bbb;
-  margin: 5px 0;
+  margin: 6px 0;
 }
 
 .p-section {
   font-family: var(--font-head);
-  font-size: 8.5px;
+  font-size: 9.5px;
   font-weight: 700;
   color: var(--pac);
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  margin: 8px 0 4px;
+  margin: 9px 0 4px;
 }
 .p-indent {
-  padding-left: 20px;
+  padding-left: 22px;
 }
 .p-body {
-  font-size: 7.5px;
+  font-size: 8.5px;
   text-align: justify;
   color: #111;
   line-height: 1.5;
@@ -498,40 +507,40 @@ body {
 
 .p-job-grid {
   display: grid;
-  grid-template-columns: 82px 1fr;
-  gap: 0 8px;
+  grid-template-columns: 90px 1fr;
+  gap: 0 10px;
   margin-bottom: 5px;
 }
 .p-badge {
   display: inline-block;
   background: var(--pac);
   color: #fff;
-  font-size: 6.5px;
+  font-size: 7.5px;
   font-weight: 700;
   border-radius: 3px;
-  padding: 2px 5px;
+  padding: 2px 6px;
   white-space: nowrap;
 }
 .p-dates {
-  font-size: 7px;
+  font-size: 7.5px;
   color: var(--pmuted);
   margin-top: 3px;
 }
 .p-title {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   color: #111;
 }
 .p-company {
-  font-size: 7.5px;
+  font-size: 8px;
   color: var(--pmuted);
   font-style: italic;
   margin-bottom: 3px;
 }
 .p-bullet {
-  font-size: 7.5px;
+  font-size: 8px;
   text-align: justify;
-  padding-left: 9px;
+  padding-left: 10px;
   position: relative;
   color: #111;
   line-height: 1.45;
@@ -544,26 +553,26 @@ body {
 
 .p-edu-grid {
   display: grid;
-  grid-template-columns: 82px 1fr;
-  gap: 0 8px;
+  grid-template-columns: 90px 1fr;
+  gap: 0 10px;
   margin-bottom: 3px;
 }
 .p-edu-dates {
-  font-size: 7px;
+  font-size: 7.5px;
   color: var(--pmuted);
 }
 .p-edu-degree {
-  font-size: 7.5px;
+  font-size: 8.5px;
   font-weight: 700;
   color: #111;
 }
 .p-edu-inst {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--pmuted);
   font-style: italic;
 }
 .p-edu-status {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--pmuted);
   font-style: italic;
 }
@@ -988,15 +997,65 @@ body {
   transition: transform var(--transition);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
-/* On state — accent color, visible in both themes */
+/* On state — always vibrant blue, visible in both themes */
 .toggle input:checked + .toggle-track {
-  background: var(--accent);
+  background: var(--toggle-on);
 }
 .toggle input:checked + .toggle-track::after {
   transform: translateX(16px);
 }
 
-/* ── Color picker ───────────────────────────────────────── */
+/* ── Font selector ──────────────────────────────────────── */
+.font-select-wrap {
+  position: relative;
+}
+.font-select-wrap select {
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a6e8c'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+.font-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.font-badge.local {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.font-badge.system {
+  background: var(--surface2);
+  color: var(--text3);
+  border: 1px solid var(--border);
+}
+
+/* ── Font size sliders ──────────────────────────────────── */
+.font-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.font-slider {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 4px;
+}
+.font-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 32px;
+  text-align: right;
+  white-space: nowrap;
+}
 .color-row {
   display: flex;
   gap: 8px;
