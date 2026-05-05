@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Resume Generator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/static/style.css" />
@@ -68,6 +69,7 @@
           </div>
 
           <div id="editor" style="display: none">
+            <!-- Generate bar -->
             <div class="generate-bar">
               <div class="generate-bar-label">
                 Gerar PDF
@@ -121,6 +123,124 @@
                       type="text"
                       placeholder="ex: Pleno, Jr, Estágio"
                     />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aparência do PDF — logo após identificação -->
+            <div class="section-card">
+              <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-header-left">
+                  <div class="section-icon">✦</div>
+                  <span class="section-title">Aparência do PDF</span>
+                </div>
+                <div class="chevron"></div>
+              </div>
+              <div class="section-body">
+                <div class="aparencia-grid">
+                  <div class="field">
+                    <label class="field-label">Fonte</label>
+                    <div class="font-select-wrap">
+                      <select
+                        id="f-font-family"
+                        class="field"
+                        style="width: 100%"
+                      >
+                        <option value="">
+                          Padrão (Inter / Liberation Sans)
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Tam. texto geral</label>
+                    <div class="font-row">
+                      <input
+                        type="range"
+                        class="font-slider"
+                        id="f-fs-body"
+                        min="7"
+                        max="12"
+                        step="0.5"
+                        value="9"
+                        oninput="syncFontSize('body')"
+                      />
+                      <span class="font-val" id="f-fs-body-val">9pt</span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Tam. nome / título</label>
+                    <div class="font-row">
+                      <input
+                        type="range"
+                        class="font-slider"
+                        id="f-fs-title"
+                        min="14"
+                        max="32"
+                        step="1"
+                        value="22"
+                        oninput="syncFontSize('title')"
+                      />
+                      <span class="font-val" id="f-fs-title-val">22pt</span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Cor de destaque</label>
+                    <div class="color-row">
+                      <input
+                        type="color"
+                        class="color-picker-swatch"
+                        id="f-accent-picker"
+                        value="#1B3A6B"
+                        oninput="syncColor('accent')"
+                      />
+                      <input
+                        type="text"
+                        class="color-hex"
+                        id="f-accent"
+                        value="#1B3A6B"
+                        oninput="syncColorText('accent')"
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Texto principal</label>
+                    <div class="color-row">
+                      <input
+                        type="color"
+                        class="color-picker-swatch"
+                        id="f-body-picker"
+                        value="#111111"
+                        oninput="syncColor('body')"
+                      />
+                      <input
+                        type="text"
+                        class="color-hex"
+                        id="f-body"
+                        value="#111111"
+                        oninput="syncColorText('body')"
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Texto secundário</label>
+                    <div class="color-row">
+                      <input
+                        type="color"
+                        class="color-picker-swatch"
+                        id="f-muted-picker"
+                        value="#555555"
+                        oninput="syncColor('muted')"
+                      />
+                      <input
+                        type="text"
+                        class="color-hex"
+                        id="f-muted"
+                        value="#555555"
+                        oninput="syncColorText('muted')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -337,128 +457,13 @@
               </div>
             </div>
 
-            <!-- Aparência -->
-            <div class="section-card">
-              <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-header-left">
-                  <div class="section-icon">Ap</div>
-                  <span class="section-title">Aparência do PDF</span>
-                </div>
-                <div class="chevron"></div>
-              </div>
-              <div class="section-body">
-                <!-- Font family -->
-                <div class="field" style="margin-bottom: 14px">
-                  <label class="field-label">Fonte</label>
-                  <div class="font-select-wrap">
-                    <select
-                      id="f-font-family"
-                      class="field"
-                      style="width: 100%"
-                    >
-                      <option value="">Padrão (Inter / Liberation Sans)</option>
-                    </select>
-                  </div>
-                </div>
+            <!-- Seções customizadas -->
+            <div id="custom-sections-container"></div>
 
-                <!-- Font sizes -->
-                <div class="grid grid-2" style="margin-bottom: 14px">
-                  <div class="field">
-                    <label class="field-label">Tamanho — texto geral</label>
-                    <div class="font-row">
-                      <input
-                        type="range"
-                        class="font-slider"
-                        id="f-fs-body"
-                        min="7"
-                        max="12"
-                        step="0.5"
-                        value="9"
-                        oninput="syncFontSize('body')"
-                      />
-                      <span class="font-val" id="f-fs-body-val">9pt</span>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">Tamanho — nome / título</label>
-                    <div class="font-row">
-                      <input
-                        type="range"
-                        class="font-slider"
-                        id="f-fs-title"
-                        min="14"
-                        max="32"
-                        step="1"
-                        value="22"
-                        oninput="syncFontSize('title')"
-                      />
-                      <span class="font-val" id="f-fs-title-val">22pt</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Colors -->
-                <div class="grid grid-3">
-                  <div class="field">
-                    <label class="field-label">Cor de destaque</label>
-                    <div class="color-row">
-                      <input
-                        type="color"
-                        class="color-picker-swatch"
-                        id="f-accent-picker"
-                        value="#1B3A6B"
-                        oninput="syncColor('accent')"
-                      />
-                      <input
-                        type="text"
-                        class="color-hex"
-                        id="f-accent"
-                        value="#1B3A6B"
-                        oninput="syncColorText('accent')"
-                      />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">Texto principal</label>
-                    <div class="color-row">
-                      <input
-                        type="color"
-                        class="color-picker-swatch"
-                        id="f-body-picker"
-                        value="#111111"
-                        oninput="syncColor('body')"
-                      />
-                      <input
-                        type="text"
-                        class="color-hex"
-                        id="f-body"
-                        value="#111111"
-                        oninput="syncColorText('body')"
-                      />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">Texto secundário</label>
-                    <div class="color-row">
-                      <input
-                        type="color"
-                        class="color-picker-swatch"
-                        id="f-muted-picker"
-                        value="#555555"
-                        oninput="syncColor('muted')"
-                      />
-                      <input
-                        type="text"
-                        class="color-hex"
-                        id="f-muted"
-                        value="#555555"
-                        oninput="syncColorText('muted')"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- Botão adicionar seção personalizada -->
+            <button class="btn-add-section" onclick="openAddSectionModal()">
+              <span>+</span> Adicionar seção personalizada
+            </button>
           </div>
           <!-- /editor -->
         </div>
@@ -481,12 +486,85 @@
 
     <div id="toast"></div>
 
+    <!-- Modal: adicionar seção -->
+    <div
+      class="modal-backdrop"
+      id="modal-add-section"
+      onclick="closeModal('modal-add-section')"
+    >
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Nova seção personalizada</h3>
+          <button class="modal-close" onclick="closeModal('modal-add-section')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label class="field-label">Nome da seção</label>
+            <input
+              id="new-section-name"
+              type="text"
+              placeholder="ex: Certificações, Projetos, Voluntariado..."
+            />
+          </div>
+          <p class="modal-hint">
+            Deseja adicionar esta seção a todos os outros CVs também?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="confirmAddSection(false)">
+            Só neste CV
+          </button>
+          <button class="btn btn-primary" onclick="confirmAddSection(true)">
+            Adicionar a todos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: excluir seção -->
+    <div
+      class="modal-backdrop"
+      id="modal-delete-section"
+      onclick="closeModal('modal-delete-section')"
+    >
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Excluir seção</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('modal-delete-section')"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Excluir <strong id="modal-delete-section-name"></strong> apenas
+            neste CV ou em todos?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="confirmDeleteSection(false)">
+            Só neste CV
+          </button>
+          <button class="btn btn-danger" onclick="confirmDeleteSection(true)">
+            Excluir em todos
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
       let profiles = [],
         activeId = null,
         isDirty = false;
       let previewOpen = false,
         previewTimer = null;
+      let _deleteSectionId = null,
+        _deleteSectionEl = null;
+      let _nextSectionId = 1;
 
       const savedTheme = localStorage.getItem("theme") || "dark";
       applyTheme(savedTheme);
@@ -499,6 +577,7 @@
           if (profiles.length > 0) selectProfile(profiles[0].id);
         });
 
+      // ── Theme ────────────────────────────────────────────────────
       function toggleTheme() {
         const next =
           document.documentElement.getAttribute("data-theme") === "dark"
@@ -514,6 +593,7 @@
         document.getElementById("theme-checkbox").checked = t === "dark";
       }
 
+      // ── Preview ───────────────────────────────────────────────────
       function togglePreview() {
         previewOpen = !previewOpen;
         document
@@ -525,6 +605,7 @@
         if (previewOpen) renderPreview();
       }
 
+      // ── Sidebar ───────────────────────────────────────────────────
       function renderSidebar() {
         const el = document.getElementById("profile-list");
         if (!profiles.length) {
@@ -534,10 +615,10 @@
         el.innerHTML = profiles
           .map(
             (p) => `
-    <div class="profile-card ${p.id === activeId ? "active" : ""}" onclick="selectProfile('${p.id}')">
-      <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")}</div>
-      <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + p.version : ""}</div>
-    </div>`,
+          <div class="profile-card ${p.id === activeId ? "active" : ""}" onclick="selectProfile('${p.id}')">
+            <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")}</div>
+            <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + p.version : ""}</div>
+          </div>`,
           )
           .join("");
       }
@@ -569,6 +650,7 @@
           education: [],
           skills: [],
           languages: [],
+          custom_sections: [],
           theme_accent: "#1B3A6B",
           theme_body: "#111111",
           theme_muted: "#555555",
@@ -594,6 +676,7 @@
         }
       });
 
+      // ── Load editor ───────────────────────────────────────────────
       function loadEditor(p) {
         document.getElementById("empty-state").style.display = "none";
         document.getElementById("editor").style.display = "block";
@@ -629,39 +712,45 @@
         renderSimpleList("lang-list", p.languages || []);
         updateCount("exp-count", (p.experience || []).length);
         updateCount("edu-count", (p.education || []).length);
+        document.getElementById("custom-sections-container").innerHTML = "";
+        (p.custom_sections || []).forEach((cs) => renderCustomSection(cs));
         if (previewOpen) renderPreview();
       }
       function V(id, val) {
         const el = document.getElementById(id);
         if (el) el.value = val || "";
       }
+      function G(id) {
+        return (document.getElementById(id)?.value || "").trim();
+      }
 
+      // ── Experience ────────────────────────────────────────────────
       function addExperience(data = {}) {
         const el = document.createElement("div");
         el.className = "repeat-item";
         const idx =
           document.querySelectorAll("#exp-list .repeat-item").length + 1;
         el.innerHTML = `
-    <div class="repeat-item-header">
-      <span class="repeat-item-num">Exp ${idx}</span>
-      <button class="btn-remove-item" onclick="removeRepeat(this,'exp-list','exp-count')">✕ remover</button>
-    </div>
-    <div class="grid grid-2">
-      <div class="field"><label class="field-label">Cargo</label>
-        <input class="exp-title" type="text" value="${ea(data.title)}" placeholder="Dev Front-end"></div>
-      <div class="field"><label class="field-label">Empresa</label>
-        <input class="exp-company" type="text" value="${ea(data.company)}" placeholder="ACME"></div>
-      <div class="field"><label class="field-label">Localização</label>
-        <input class="exp-location" type="text" value="${ea(data.location)}" placeholder="São Paulo, SP"></div>
-      <div class="field"><label class="field-label">Início (MM/AAAA)</label>
-        <input class="exp-start" type="text" value="${ea(data.start_date)}" placeholder="08/2024"></div>
-      <div class="field col-span-2"><label class="field-label">Fim (vazio = atual)</label>
-        <input class="exp-end" type="text" value="${ea(data.end_date)}" placeholder="01/2024"></div>
-      <div class="field col-span-2"><label class="field-label">Bullet points</label>
-        <div class="bullet-list" data-bullets></div>
-        <button class="btn-add-item" style="margin-top:4px" onclick="addBullet(this)">+ Adicionar bullet</button>
-      </div>
-    </div>`;
+          <div class="repeat-item-header">
+            <span class="repeat-item-num">Exp ${idx}</span>
+            <button class="btn-remove-item" onclick="removeRepeat(this,'exp-list','exp-count')">✕ remover</button>
+          </div>
+          <div class="grid grid-2">
+            <div class="field"><label class="field-label">Cargo</label>
+              <input class="exp-title" type="text" value="${ea(data.title)}" placeholder="Dev Front-end"></div>
+            <div class="field"><label class="field-label">Empresa</label>
+              <input class="exp-company" type="text" value="${ea(data.company)}" placeholder="ACME"></div>
+            <div class="field"><label class="field-label">Localização</label>
+              <input class="exp-location" type="text" value="${ea(data.location)}" placeholder="São Paulo, SP"></div>
+            <div class="field"><label class="field-label">Início (MM/AAAA)</label>
+              <input class="exp-start" type="text" value="${ea(data.start_date)}" placeholder="08/2024"></div>
+            <div class="field col-span-2"><label class="field-label">Fim (vazio = atual)</label>
+              <input class="exp-end" type="text" value="${ea(data.end_date)}" placeholder="01/2024"></div>
+            <div class="field col-span-2"><label class="field-label">Bullet points</label>
+              <div class="bullet-list" data-bullets></div>
+              <button class="btn-add-item" style="margin-top:4px" onclick="addBullet(this)">+ Adicionar bullet</button>
+            </div>
+          </div>`;
         document.getElementById("exp-list").appendChild(el);
         const bl = el.querySelector("[data-bullets]");
         (data.bullets || []).forEach((b) => addBulletTo(bl, b));
@@ -678,40 +767,42 @@
         const r = document.createElement("div");
         r.className = "bullet-row";
         r.innerHTML = `<input type="text" value="${ea(v)}" placeholder="O que você fez e qual foi o impacto...">
-    <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
+          <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
         list.appendChild(r);
       }
 
+      // ── Education ─────────────────────────────────────────────────
       function addEducation(data = {}) {
         const el = document.createElement("div");
         el.className = "repeat-item";
         const idx =
           document.querySelectorAll("#edu-list .repeat-item").length + 1;
         el.innerHTML = `
-    <div class="repeat-item-header">
-      <span class="repeat-item-num">Edu ${idx}</span>
-      <button class="btn-remove-item" onclick="removeRepeat(this,'edu-list','edu-count')">✕ remover</button>
-    </div>
-    <div class="grid grid-2">
-      <div class="field"><label class="field-label">Período</label>
-        <input class="edu-dates" type="text" value="${ea(data.dates)}" placeholder="07/2023 - 07/2027"></div>
-      <div class="field"><label class="field-label">Status</label>
-        <select class="edu-status">
-          <option ${data.status === "Cursando" ? "selected" : ""}>Cursando</option>
-          <option ${data.status === "Concluído" ? "selected" : ""}>Concluído</option>
-          <option ${data.status === "Trancado" ? "selected" : ""}>Trancado</option>
-        </select></div>
-      <div class="field col-span-2"><label class="field-label">Grau e curso</label>
-        <input class="edu-degree" type="text" value="${ea(data.degree)}" placeholder="Bacharelado em Eng. de Software"></div>
-      <div class="field col-span-2"><label class="field-label">Instituição · Cidade</label>
-        <input class="edu-institution" type="text" value="${ea(data.institution)}" placeholder="FIAP · São Paulo"></div>
-    </div>`;
+          <div class="repeat-item-header">
+            <span class="repeat-item-num">Edu ${idx}</span>
+            <button class="btn-remove-item" onclick="removeRepeat(this,'edu-list','edu-count')">✕ remover</button>
+          </div>
+          <div class="grid grid-2">
+            <div class="field"><label class="field-label">Período</label>
+              <input class="edu-dates" type="text" value="${ea(data.dates)}" placeholder="07/2023 - 07/2027"></div>
+            <div class="field"><label class="field-label">Status</label>
+              <select class="edu-status">
+                <option ${data.status === "Cursando" ? "selected" : ""}>Cursando</option>
+                <option ${data.status === "Concluído" ? "selected" : ""}>Concluído</option>
+                <option ${data.status === "Trancado" ? "selected" : ""}>Trancado</option>
+              </select></div>
+            <div class="field col-span-2"><label class="field-label">Grau e curso</label>
+              <input class="edu-degree" type="text" value="${ea(data.degree)}" placeholder="Bacharelado em Eng. de Software"></div>
+            <div class="field col-span-2"><label class="field-label">Instituição · Cidade</label>
+              <input class="edu-institution" type="text" value="${ea(data.institution)}" placeholder="FIAP · São Paulo"></div>
+          </div>`;
         document.getElementById("edu-list").appendChild(el);
         updateCount(
           "edu-count",
           document.querySelectorAll("#edu-list .repeat-item").length,
         );
       }
+
       function removeRepeat(btn, listId, countId) {
         btn.closest(".repeat-item").remove();
         updateCount(
@@ -720,6 +811,7 @@
         );
       }
 
+      // ── Simple lists ──────────────────────────────────────────────
       function renderSimpleList(id, items) {
         document.getElementById(id).innerHTML = "";
         items.forEach((v) => addSimple(id, v));
@@ -728,7 +820,7 @@
         const r = document.createElement("div");
         r.className = "simple-row";
         r.innerHTML = `<input type="text" value="${ea(v)}" placeholder="...">
-    <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
+          <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
         document.getElementById(id).appendChild(r);
       }
       function getSimpleList(id) {
@@ -737,6 +829,93 @@
           .filter(Boolean);
       }
 
+      // ── Custom sections ───────────────────────────────────────────
+      function openAddSectionModal() {
+        document.getElementById("new-section-name").value = "";
+        openModal("modal-add-section");
+        setTimeout(
+          () => document.getElementById("new-section-name").focus(),
+          80,
+        );
+      }
+
+      function confirmAddSection(allProfiles) {
+        const name = document.getElementById("new-section-name").value.trim();
+        if (!name) {
+          document.getElementById("new-section-name").focus();
+          return;
+        }
+        closeModal("modal-add-section");
+        const section = { id: "cs_" + _nextSectionId++, name, items: [] };
+        renderCustomSection(section);
+        if (allProfiles) {
+          profiles.forEach((p) => {
+            if (p.id !== activeId) {
+              if (!p.custom_sections) p.custom_sections = [];
+              p.custom_sections.push({ ...section, items: [] });
+            }
+          });
+          toast(`"${name}" adicionada a todos os CVs`, "success");
+        } else {
+          toast(`"${name}" adicionada`, "success");
+        }
+        setDirty(true);
+      }
+
+      function renderCustomSection(cs) {
+        const container = document.getElementById("custom-sections-container");
+        const el = document.createElement("div");
+        el.className = "section-card";
+        el.dataset.csId = cs.id;
+        const listId = `cs-list-${cs.id}`;
+        el.innerHTML = `
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-header-left">
+              <div class="section-icon">✦</div>
+              <span class="section-title">${esc(cs.name)}</span>
+              <span class="section-custom-badge">personalizada</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn-section-delete" onclick="event.stopPropagation();openDeleteSectionModal('${cs.id}',this.closest('.section-card'),'${esc(cs.name)}')" title="Excluir seção">✕</button>
+              <div class="chevron open"></div>
+            </div>
+          </div>
+          <div class="section-body open">
+            <div class="simple-list" id="${listId}"></div>
+            <button class="btn-add-item" onclick="addSimple('${listId}','')">+ Adicionar item</button>
+          </div>`;
+        container.appendChild(el);
+        (cs.items || []).forEach((v) => addSimple(listId, v));
+      }
+
+      function openDeleteSectionModal(sectionId, el, name) {
+        _deleteSectionId = sectionId;
+        _deleteSectionEl = el;
+        document.getElementById("modal-delete-section-name").textContent =
+          `"${name}"`;
+        openModal("modal-delete-section");
+      }
+
+      function confirmDeleteSection(allProfiles) {
+        closeModal("modal-delete-section");
+        if (_deleteSectionEl) _deleteSectionEl.remove();
+        if (allProfiles) {
+          profiles.forEach((p) => {
+            if (p.custom_sections)
+              p.custom_sections = p.custom_sections.filter(
+                (cs) => cs.id !== _deleteSectionId,
+              );
+          });
+          toast("Seção removida de todos os CVs", "info");
+        } else {
+          toast("Seção removida deste CV", "info");
+        }
+        _deleteSectionId = null;
+        _deleteSectionEl = null;
+        setDirty(true);
+      }
+
+      // ── Collect ───────────────────────────────────────────────────
       function collectProfile() {
         const experience = [
           ...document.querySelectorAll("#exp-list .repeat-item"),
@@ -758,6 +937,17 @@
           institution: el.querySelector(".edu-institution").value.trim(),
           status: el.querySelector(".edu-status").value,
         }));
+        const custom_sections = [
+          ...document.querySelectorAll(
+            "#custom-sections-container .section-card",
+          ),
+        ].map((el) => ({
+          id: el.dataset.csId,
+          name: el.querySelector(".section-title").textContent.trim(),
+          items: [...el.querySelectorAll(".simple-list input")]
+            .map((i) => i.value.trim())
+            .filter(Boolean),
+        }));
         return {
           id: activeId,
           label: G("f-label"),
@@ -776,27 +966,25 @@
           technologies: getSimpleList("tech-list"),
           skills: getSimpleList("skills-list"),
           languages: getSimpleList("lang-list"),
+          custom_sections,
           theme_accent: G("f-accent"),
           theme_body: G("f-body"),
           theme_muted: G("f-muted"),
         };
       }
-      function G(id) {
-        return (document.getElementById(id)?.value || "").trim();
-      }
 
+      // ── Validate ──────────────────────────────────────────────────
       function validate() {
         clearAllErrors();
         let valid = true;
-        const required = [
+        [
           { id: "f-label", err: "err-label", card: "sc-identity" },
           { id: "f-name", err: "err-name", card: "sc-personal" },
           { id: "f-location", err: "err-location", card: "sc-personal" },
           { id: "f-phone", err: "err-phone", card: "sc-personal" },
           { id: "f-email", err: "err-email", card: "sc-personal" },
           { id: "f-resumo", err: "err-resumo", card: "sc-resumo" },
-        ];
-        required.forEach(({ id, err, card }) => {
+        ].forEach(({ id, err, card }) => {
           const input = document.getElementById(id),
             val = input.value.trim();
           let msg = "";
@@ -843,6 +1031,7 @@
         }
       });
 
+      // ── Save / Delete ─────────────────────────────────────────────
       function saveProfile() {
         if (!validate()) {
           toast("Corrija os campos obrigatórios", "error");
@@ -868,7 +1057,6 @@
             toast("Perfil salvo!", "success");
           });
       }
-
       function deleteProfile() {
         if (!confirm("Excluir este perfil permanentemente?")) return;
         if (!activeId) {
@@ -894,6 +1082,7 @@
         setDirty(false);
       }
 
+      // ── Generate PDF ──────────────────────────────────────────────
       function generate() {
         if (!validate()) {
           toast("Corrija os campos obrigatórios antes de gerar", "error");
@@ -935,12 +1124,12 @@
           });
       }
 
+      // ── Preview render ────────────────────────────────────────────
       function schedulePreview() {
         if (!previewOpen) return;
         clearTimeout(previewTimer);
         previewTimer = setTimeout(renderPreview, 300);
       }
-
       function calcDuration(start, end) {
         try {
           const parse = (s) => {
@@ -963,7 +1152,6 @@
           return "";
         }
       }
-
       function renderPreview() {
         const p = collectProfile(),
           paper = document.getElementById("paper"),
@@ -983,8 +1171,7 @@
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
-        let html = "";
-        html += `<div class="p-name">${h(p.name)}</div>`;
+        let html = `<div class="p-name">${h(p.name)}</div>`;
         if (p.location || p.phone || p.email) {
           html += `<div class="p-contact">${h(p.location)}</div>`;
           html += `<div class="p-contact">${h(p.phone)}${p.phone && p.email ? " · " : ""}${h(p.email)}</div>`;
@@ -999,9 +1186,8 @@
           html += `<div class="p-links">${li}&nbsp;&nbsp;&nbsp;${gh}</div>`;
         }
         html += `<hr class="p-divider">`;
-        if (p.resumo) {
+        if (p.resumo)
           html += `<div class="p-section">Resumo Profissional</div><div class="p-indent"><div class="p-body">${h(p.resumo)}</div></div><hr class="p-divider">`;
-        }
         if (p.experience.length) {
           html += `<div class="p-section">Histórico Profissional</div>`;
           p.experience.forEach((job, i) => {
@@ -1011,47 +1197,51 @@
                 ? calcDuration(job.start_date, job.end_date)
                 : "";
             html += `<div class="p-indent"><div class="p-job-grid"><div>${showBadge && dur ? `<span class="p-badge">${h(dur)}</span><br>` : ""}
-        <div class="p-dates">${h(job.start_date)} - ${h(job.end_date || "Atual")}</div></div>
-        <div><div class="p-title">${h(job.title)}</div><div class="p-company">${h(job.company)}${job.company && job.location ? " · " : ""}${h(job.location)}</div>
-        ${(job.bullets || [])
-          .filter(Boolean)
-          .map((b) => `<div class="p-bullet">${h(b)}</div>`)
-          .join("")}
-        </div></div></div>`;
+              <div class="p-dates">${h(job.start_date)} - ${h(job.end_date || "Atual")}</div></div>
+              <div><div class="p-title">${h(job.title)}</div><div class="p-company">${h(job.company)}${job.company && job.location ? " · " : ""}${h(job.location)}</div>
+              ${(job.bullets || [])
+                .filter(Boolean)
+                .map((b) => `<div class="p-bullet">${h(b)}</div>`)
+                .join("")}</div></div></div>`;
           });
           html += `<hr class="p-divider">`;
         }
-        if (p.technologies.length) {
+        if (p.technologies.length)
           html += `<div class="p-section">Tecnologias</div><div class="p-indent">${p.technologies.map((t) => `<div class="p-bullet">${h(t)}</div>`).join("")}</div><hr class="p-divider">`;
-        }
         if (p.education.length) {
           html += `<div class="p-section">Formação Acadêmica</div>`;
           p.education.forEach((edu, i) => {
             if (i > 0) html += `<div style="height:3px"></div>`;
             html += `<div class="p-indent"><div class="p-edu-grid"><div class="p-edu-dates">${h(edu.dates)}</div>
-        <div><div class="p-edu-degree">${h(edu.degree)}</div><div class="p-edu-inst">${h(edu.institution)}</div><div class="p-edu-status">Status · ${h(edu.status)}</div></div></div></div>`;
+              <div><div class="p-edu-degree">${h(edu.degree)}</div><div class="p-edu-inst">${h(edu.institution)}</div><div class="p-edu-status">Status · ${h(edu.status)}</div></div></div></div>`;
           });
           html += `<hr class="p-divider">`;
         }
         if (p.skills.length) {
           const half = Math.ceil(p.skills.length / 2);
           html += `<div class="p-section">Habilidades e Competências</div><div class="p-indent"><div class="p-skills-grid">
-      <div>${p.skills
-        .slice(0, half)
-        .map((s) => `<div class="p-bullet">${h(s)}</div>`)
-        .join("")}</div>
-      <div>${p.skills
-        .slice(half)
-        .map((s) => `<div class="p-bullet">${h(s)}</div>`)
-        .join("")}</div>
-    </div></div><hr class="p-divider">`;
+            <div>${p.skills
+              .slice(0, half)
+              .map((s) => `<div class="p-bullet">${h(s)}</div>`)
+              .join("")}</div>
+            <div>${p.skills
+              .slice(half)
+              .map((s) => `<div class="p-bullet">${h(s)}</div>`)
+              .join("")}</div>
+          </div></div><hr class="p-divider">`;
         }
-        if (p.languages.length) {
+        if (p.languages.length)
           html += `<div class="p-section">Idiomas</div><div class="p-indent">${p.languages.map((l) => `<div class="p-body">${h(l)}</div>`).join("")}</div>`;
+        if (p.custom_sections && p.custom_sections.length) {
+          p.custom_sections.forEach((cs) => {
+            if (cs.items && cs.items.length)
+              html += `<hr class="p-divider"><div class="p-section">${h(cs.name)}</div><div class="p-indent">${cs.items.map((i) => `<div class="p-bullet">${h(i)}</div>`).join("")}</div>`;
+          });
         }
         paper.innerHTML = html;
       }
 
+      // ── Helpers ───────────────────────────────────────────────────
       function toggleSection(header) {
         header.nextElementSibling.classList.toggle("open");
         header.querySelector(".chevron").classList.toggle("open");
@@ -1073,6 +1263,23 @@
           schedulePreview();
         }
       }
+      function syncFontSize(key) {
+        document.getElementById(`f-fs-${key}-val`).textContent =
+          document.getElementById(`f-fs-${key}`).value + "pt";
+        schedulePreview();
+      }
+      function openModal(id) {
+        document.getElementById(id).classList.add("open");
+      }
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("open");
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape")
+          document
+            .querySelectorAll(".modal-backdrop.open")
+            .forEach((m) => m.classList.remove("open"));
+      });
       let toastTimer;
       function toast(msg, type = "info") {
         const el = document.getElementById("toast");
