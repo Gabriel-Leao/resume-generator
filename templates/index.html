@@ -24,9 +24,22 @@
       <div class="profile-list" id="profile-list"></div>
     </aside>
 
+    <div
+      class="sidebar-overlay"
+      id="sidebar-overlay"
+      onclick="closeSidebar()"
+    ></div>
     <div class="main">
       <div class="topbar">
         <div class="topbar-left">
+          <button
+            class="btn-hamburger"
+            id="btn-hamburger"
+            onclick="toggleSidebar()"
+            aria-label="Menu"
+          >
+            <span></span><span></span><span></span>
+          </button>
           <span class="topbar-title" id="topbar-title">Resume Generator</span>
           <span
             class="unsaved-dot"
@@ -49,6 +62,14 @@
             </button>
           </div>
           <button
+            class="btn-preview"
+            id="btn-preview"
+            onclick="togglePreview()"
+          >
+            Preview
+          </button>
+          <div class="topbar-divider"></div>
+          <button
             class="btn-settings"
             onclick="openSettings()"
             title="Configurações"
@@ -69,13 +90,6 @@
               />
             </svg>
           </button>
-          <button
-            class="btn-preview"
-            id="btn-preview"
-            onclick="togglePreview()"
-          >
-            Preview
-          </button>
         </div>
       </div>
 
@@ -88,7 +102,6 @@
           </div>
 
           <div id="editor" style="display: none">
-            <!-- Generate bar -->
             <div class="generate-bar">
               <div class="generate-bar-label">
                 Gerar PDF
@@ -103,7 +116,6 @@
               </button>
             </div>
 
-            <!-- Progress bar (hidden until generating) -->
             <div class="progress-wrap" id="progress-wrap" style="display: none">
               <div class="progress-bar-track">
                 <div class="progress-bar-fill" id="progress-bar-fill"></div>
@@ -113,7 +125,6 @@
               >
             </div>
 
-            <!-- Identificação -->
             <div class="section-card" id="sc-identity">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -150,7 +161,6 @@
               </div>
             </div>
 
-            <!-- Aparência do PDF -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -161,7 +171,6 @@
               </div>
               <div class="section-body">
                 <div class="ap-grid">
-                  <!-- Fonte -->
                   <div class="ap-item ap-item-full">
                     <label class="ap-label"
                       >Fonte
@@ -176,7 +185,6 @@
                     </select>
                   </div>
 
-                  <!-- Tamanho texto -->
                   <div class="ap-item">
                     <label class="ap-label"
                       >Tamanho do texto
@@ -201,7 +209,6 @@
                     </div>
                   </div>
 
-                  <!-- Tamanho nome -->
                   <div class="ap-item">
                     <label class="ap-label"
                       >Tamanho do nome
@@ -226,113 +233,109 @@
                     </div>
                   </div>
 
-                  <!-- Cor de destaque -->
-                  <div class="ap-item">
-                    <label class="ap-label"
-                      >Cor de destaque
-                      <span
-                        class="tip"
-                        data-tip="Usada no nome, títulos e badges. Prefira tons escuros para melhor impressão."
-                        >?</span
-                      ></label
-                    >
-                    <div class="ap-color">
-                      <input
-                        type="color"
-                        id="f-accent-picker"
-                        value="#1B3A6B"
-                        oninput="syncColor('accent')"
-                      />
-                      <input
-                        type="text"
-                        id="f-accent"
-                        value="#1B3A6B"
-                        oninput="syncColorText('accent')"
-                        spellcheck="false"
-                      />
+                  <div class="ap-item ap-item-full ap-colors-badge">
+                    <div class="ap-colors-row">
+                      <div class="ap-color-field">
+                        <label class="ap-label"
+                          >Cor de destaque
+                          <span
+                            class="tip"
+                            data-tip="Usada no nome, títulos e badges. Prefira tons escuros para melhor impressão."
+                            >?</span
+                          ></label
+                        >
+                        <div class="ap-color">
+                          <input
+                            type="color"
+                            id="f-accent-picker"
+                            value="#1B3A6B"
+                            oninput="syncColor('accent')"
+                          />
+                          <input
+                            type="text"
+                            id="f-accent"
+                            value="#1B3A6B"
+                            oninput="syncColorText('accent')"
+                            spellcheck="false"
+                          />
+                        </div>
+                      </div>
+                      <div class="ap-color-field">
+                        <label class="ap-label"
+                          >Texto principal
+                          <span
+                            class="tip"
+                            data-tip="Cor do texto de corpo: cargos, bullets, descrições. Preto (#111) garante melhor legibilidade ao imprimir."
+                            >?</span
+                          ></label
+                        >
+                        <div class="ap-color">
+                          <input
+                            type="color"
+                            id="f-body-picker"
+                            value="#111111"
+                            oninput="syncColor('body')"
+                          />
+                          <input
+                            type="text"
+                            id="f-body"
+                            value="#111111"
+                            oninput="syncColorText('body')"
+                            spellcheck="false"
+                          />
+                        </div>
+                      </div>
+                      <div class="ap-color-field">
+                        <label class="ap-label"
+                          >Texto secundário
+                          <span
+                            class="tip"
+                            data-tip="Cor de informações de apoio: empresa, datas, localização. Cinza médio (#555) cria hierarquia sem perder legibilidade."
+                            >?</span
+                          ></label
+                        >
+                        <div class="ap-color">
+                          <input
+                            type="color"
+                            id="f-muted-picker"
+                            value="#555555"
+                            oninput="syncColor('muted')"
+                          />
+                          <input
+                            type="text"
+                            id="f-muted"
+                            value="#555555"
+                            oninput="syncColorText('muted')"
+                            spellcheck="false"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-
-                  <!-- Texto principal -->
-                  <div class="ap-item">
-                    <label class="ap-label"
-                      >Texto principal
-                      <span
-                        class="tip"
-                        data-tip="Cor do texto de corpo: cargos, bullets, descrições. Preto (#111) garante melhor legibilidade ao imprimir."
-                        >?</span
-                      ></label
-                    >
-                    <div class="ap-color">
-                      <input
-                        type="color"
-                        id="f-body-picker"
-                        value="#111111"
-                        oninput="syncColor('body')"
-                      />
-                      <input
-                        type="text"
-                        id="f-body"
-                        value="#111111"
-                        oninput="syncColorText('body')"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Texto secundário -->
-                  <div class="ap-item">
-                    <label class="ap-label"
-                      >Texto secundário
-                      <span
-                        class="tip"
-                        data-tip="Cor de informações de apoio: empresa, datas, localização. Cinza médio (#555) cria hierarquia sem perder legibilidade."
-                        >?</span
-                      ></label
-                    >
-                    <div class="ap-color">
-                      <input
-                        type="color"
-                        id="f-muted-picker"
-                        value="#555555"
-                        oninput="syncColor('muted')"
-                      />
-                      <input
-                        type="text"
-                        id="f-muted"
-                        value="#555555"
-                        oninput="syncColorText('muted')"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Badge de tempo -->
-                  <div class="ap-item ap-item-full ap-item-toggle">
-                    <div class="ap-toggle-label">
-                      <span
-                        >Badge de tempo
+                    <div class="ap-item-toggle">
+                      <div class="ap-toggle-label">
                         <span
-                          class="tip"
-                          data-tip="Exibe um selo no PDF com o tempo em cada emprego (ex: 1 ano e 3 meses). Calculado automaticamente pelas datas. Desativado por padrão."
-                          >?</span
-                        ></span
-                      >
-                      <small
-                        >Exibe a duração de cada experiência diretamente no
-                        PDF</small
-                      >
+                          >Badge de tempo
+                          <span
+                            class="tip"
+                            data-tip="Exibe um selo no PDF com o tempo em cada emprego (ex: 1 ano e 3 meses). Calculado automaticamente pelas datas. Desativado por padrão."
+                            >?</span
+                          ></span
+                        >
+                        <small
+                          >Exibe a duração de cada experiência diretamente no
+                          PDF</small
+                        >
+                      </div>
+                      <label class="toggle">
+                        <input type="checkbox" id="f-badge" />
+                        <span class="toggle-track"></span>
+                      </label>
                     </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="f-badge" />
-                      <span class="toggle-track"></span>
-                    </label>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Pessoal -->
             <div class="section-card" id="sc-personal">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -418,7 +421,6 @@
               </div>
             </div>
 
-            <!-- Resumo -->
             <div class="section-card" id="sc-resumo">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -445,7 +447,6 @@
               </div>
             </div>
 
-            <!-- Experiência -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -463,7 +464,6 @@
               </div>
             </div>
 
-            <!-- Tecnologias -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -485,7 +485,6 @@
               </div>
             </div>
 
-            <!-- Formação -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -503,7 +502,6 @@
               </div>
             </div>
 
-            <!-- Habilidades -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -523,7 +521,6 @@
               </div>
             </div>
 
-            <!-- Idiomas -->
             <div class="section-card">
               <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-header-left">
@@ -543,19 +540,14 @@
               </div>
             </div>
 
-            <!-- Seções customizadas -->
             <div id="custom-sections-container"></div>
 
-            <!-- Botão adicionar seção personalizada -->
             <button class="btn-add-section" onclick="openAddSectionModal()">
               <span>+</span> Adicionar seção personalizada
             </button>
           </div>
-          <!-- /editor -->
         </div>
-        <!-- /content -->
 
-        <!-- Preview panel -->
         <div class="preview-panel" id="preview-panel">
           <div class="preview-label">Preview</div>
           <div class="paper-wrap">
@@ -566,13 +558,10 @@
           </div>
         </div>
       </div>
-      <!-- /body-area -->
     </div>
-    <!-- /main -->
 
     <div id="toast"></div>
 
-    <!-- Modal: configurações -->
     <div
       class="modal-backdrop"
       id="modal-settings"
@@ -674,7 +663,6 @@
       </div>
     </div>
 
-    <!-- Modal: confirmar salvar pasta -->
     <div
       class="modal-backdrop"
       id="modal-save-dir"
@@ -707,7 +695,6 @@
       </div>
     </div>
 
-    <!-- Modal: adicionar seção -->
     <div
       class="modal-backdrop"
       id="modal-add-section"
@@ -744,7 +731,6 @@
       </div>
     </div>
 
-    <!-- Modal: excluir seção -->
     <div
       class="modal-backdrop"
       id="modal-delete-section"
@@ -773,6 +759,92 @@
           <button class="btn btn-danger" onclick="confirmDeleteSection(true)">
             Excluir em todos
           </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-bar">
+      <button class="mobile-bar-btn" onclick="toggleSidebar()">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+        <span>Perfis</span>
+      </button>
+      <button
+        class="mobile-bar-btn"
+        id="mobile-btn-save"
+        onclick="saveProfile()"
+        disabled
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+          />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+        <span>Salvar</span>
+      </button>
+      <button
+        class="mobile-bar-btn mobile-bar-primary"
+        id="mobile-btn-generate"
+        onclick="generate()"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        <span>PDF</span>
+      </button>
+      <button class="mobile-bar-btn" onclick="toggleMobilePreview()">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+        <span>Preview</span>
+      </button>
+    </div>
+
+    <div class="mobile-preview-modal" id="mobile-preview-modal">
+      <div class="mobile-preview-header">
+        <span>Preview do CV</span>
+        <button onclick="toggleMobilePreview()">✕</button>
+      </div>
+      <div class="mobile-preview-body">
+        <div class="paper-wrap">
+          <div class="paper" id="paper-mobile"></div>
         </div>
       </div>
     </div>

@@ -7,17 +7,9 @@ let previewOpen = false,
 let _deleteSectionId = null,
   _deleteSectionEl = null;
 let _nextSectionId = 1;
-
-// ── Settings & download dir ───────────────────────────────
-// Stored in localStorage:
-//   rg_theme       — 'dark' | 'light'
-//   rg_always_ask  — '1' = always open picker
 //   rg_dir_name    — display name of saved dir (e.g. "Downloads")
-// The actual FileSystemDirectoryHandle is stored in IndexedDB via helpers below.
 
 const supportsFilePicker = !!window.showSaveFilePicker;
-
-// IndexedDB helpers to persist the directory handle
 function idbOpen() {
   return new Promise((res, rej) => {
     const req = indexedDB.open("rg_db", 1);
@@ -53,14 +45,23 @@ async function idbDel(key) {
     tx.onerror = (e) => rej(e.target.error);
   });
 }
-
-// ── Pending dir handle (to show confirm modal after first save) ──
 let _pendingDirHandle = null;
-
-// ── Init ─────────────────────────────────────────────────────
 const savedTheme = localStorage.getItem("rg_theme") || "dark";
 applyTheme(savedTheme);
 loadSettings();
+
+fetch("/api/fonts")
+  .then((r) => r.json())
+  .then((families) => {
+    const sel = document.getElementById("f-font-family");
+    families.forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  })
+  .catch(() => {});
 
 fetch("/api/profiles")
   .then((r) => r.json())
@@ -69,8 +70,6 @@ fetch("/api/profiles")
     renderSidebar();
     if (profiles.length > 0) selectProfile(profiles[0].id);
   });
-
-// ── Theme ────────────────────────────────────────────────────
 function toggleTheme() {
   const next =
     document.documentElement.getAttribute("data-theme") === "dark"
@@ -85,8 +84,6 @@ function applyTheme(t) {
     t === "dark" ? "🌙 Escuro" : "☀ Claro";
   document.getElementById("theme-checkbox").checked = t === "dark";
 }
-
-// ── Preview ───────────────────────────────────────────────────
 function togglePreview() {
   previewOpen = !previewOpen;
   document
@@ -97,8 +94,6 @@ function togglePreview() {
     .classList.toggle("active", previewOpen);
   if (previewOpen) renderPreview();
 }
-
-// ── Sidebar ───────────────────────────────────────────────────
 function renderSidebar() {
   const el = document.getElementById("profile-list");
   if (!profiles.length) {
@@ -144,6 +139,7 @@ function newProfile() {
     skills: [],
     languages: [],
     custom_sections: [],
+    font_family: "",
     theme_accent: "#1B3A6B",
     theme_body: "#111111",
     theme_muted: "#555555",
@@ -177,8 +173,6 @@ document.addEventListener("change", (e) => {
     schedulePreview();
   }
 });
-
-// ── Load editor ───────────────────────────────────────────────
 function loadEditor(p) {
   document.getElementById("empty-state").style.display = "none";
   document.getElementById("editor").style.display = "block";
@@ -200,6 +194,7 @@ function loadEditor(p) {
     p.theme_accent || "#1B3A6B";
   V("f-body", p.theme_body || "#111111");
   document.getElementById("f-body-picker").value = p.theme_body || "#111111";
+  V("f-font-family", p.font_family || "");
   V("f-muted", p.theme_muted || "#555555");
   document.getElementById("f-muted-picker").value = p.theme_muted || "#555555";
   document.getElementById("f-badge").checked = p.show_badge === true;
@@ -227,8 +222,6 @@ function V(id, val) {
 function G(id) {
   return (document.getElementById(id)?.value || "").trim();
 }
-
-// ── Experience ────────────────────────────────────────────────
 function addExperience(data = {}) {
   const el = document.createElement("div");
   el.className = "repeat-item";
@@ -273,8 +266,6 @@ function addBulletTo(list, v) {
     <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
   list.appendChild(r);
 }
-
-// ── Education ─────────────────────────────────────────────────
 function addEducation(data = {}) {
   const el = document.createElement("div");
   el.className = "repeat-item";
@@ -312,8 +303,6 @@ function removeRepeat(btn, listId, countId) {
     document.querySelectorAll(`#${listId} .repeat-item`).length,
   );
 }
-
-// ── Simple lists ──────────────────────────────────────────────
 function renderSimpleList(id, items) {
   document.getElementById(id).innerHTML = "";
   items.forEach((v) => addSimple(id, v));
@@ -330,8 +319,6 @@ function getSimpleList(id) {
     .map((i) => i.value.trim())
     .filter(Boolean);
 }
-
-// ── Custom sections ───────────────────────────────────────────
 function openAddSectionModal() {
   document.getElementById("new-section-name").value = "";
   openModal("modal-add-section");
@@ -413,8 +400,6 @@ function confirmDeleteSection(allProfiles) {
   _deleteSectionEl = null;
   checkDirty();
 }
-
-// ── Collect ───────────────────────────────────────────────────
 function collectProfile() {
   const experience = [
     ...document.querySelectorAll("#exp-list .repeat-item"),
@@ -464,14 +449,13 @@ function collectProfile() {
     skills: getSimpleList("skills-list"),
     languages: getSimpleList("lang-list"),
     custom_sections,
+    font_family: G("f-font-family"),
     theme_accent: G("f-accent"),
     theme_body: G("f-body"),
     theme_muted: G("f-muted"),
     show_badge: document.getElementById("f-badge").checked,
   };
 }
-
-// ── Validate ──────────────────────────────────────────────────
 function validate() {
   clearAllErrors();
   let valid = true;
@@ -528,8 +512,6 @@ document.addEventListener("input", (e) => {
       ?.classList.remove("show");
   }
 });
-
-// ── Save / Delete ─────────────────────────────────────────────
 function saveProfile() {
   if (!validate()) {
     toast("Corrija os campos obrigatórios", "error");
@@ -579,8 +561,6 @@ function resetToEmpty() {
   document.getElementById("topbar-title").textContent = "Resume Generator";
   setDirty(false);
 }
-
-// ── Progress helpers ──────────────────────────────────────────
 let _progressTimer = null;
 function showProgress(pct, label) {
   document.getElementById("progress-wrap").style.display = "flex";
@@ -599,8 +579,6 @@ function hideProgress() {
     wrap.classList.remove("done");
   }, 600);
 }
-
-// ── Settings ──────────────────────────────────────────────────
 function openSettings() {
   loadSettingsUI();
   openModal("modal-settings");
@@ -646,8 +624,6 @@ function updateDirHint(name) {
 async function changeDownloadDir() {
   if (!supportsFilePicker) return;
   try {
-    // showDirectoryPicker not available everywhere; use showSaveFilePicker as proxy
-    // Actually use showDirectoryPicker if available
     if (!window.showDirectoryPicker) {
       toast("Seu browser não suporta seleção de pasta diretamente", "info");
       return;
@@ -668,7 +644,6 @@ async function clearDownloadDir() {
   updateDirHint("");
   toast("Pasta removida", "info");
 }
-// Called when user clicks "Sim, salvar pasta" in the confirm modal
 async function confirmSaveDir() {
   closeModal("modal-save-dir");
   if (_pendingDirHandle) {
@@ -682,8 +657,6 @@ async function confirmSaveDir() {
     _pendingDirHandle = null;
   }
 }
-
-// ── Generate PDF ──────────────────────────────────────────────
 async function generate() {
   if (!validate()) {
     toast("Corrija os campos obrigatórios antes de gerar", "error");
@@ -732,11 +705,8 @@ async function generate() {
     if (err.name !== "AbortError") toast("Erro: " + err.message, "error");
   }
 }
-
-// ── Save blob with smart dir logic ────────────────────────────
 async function saveBlob(blob, filename) {
   if (!supportsFilePicker) {
-    // browser sem suporte — download direto
     triggerDownload(blob, filename);
     return;
   }
@@ -745,7 +715,6 @@ async function saveBlob(blob, filename) {
   const savedDir = await idbGet("rg_dir_handle").catch(() => null);
 
   if (!alwaysAsk && savedDir) {
-    // Temos pasta salva — salvar direto nela
     try {
       await savedDir.requestPermission({ mode: "readwrite" });
       const fileHandle = await savedDir.getFileHandle(filename, {
@@ -756,14 +725,11 @@ async function saveBlob(blob, filename) {
       await writable.close();
       return;
     } catch (err) {
-      // Pasta pode ter sido removida ou permissão negada — cai no picker
       await idbDel("rg_dir_handle");
       localStorage.removeItem("rg_dir_name");
       updateDirHint("");
     }
   }
-
-  // Sem pasta salva (ou alwaysAsk) — abre picker de arquivo
   try {
     const fileHandle = await window.showSaveFilePicker({
       suggestedName: filename,
@@ -772,20 +738,14 @@ async function saveBlob(blob, filename) {
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
-
-    // Primeira vez sem pasta salva? Oferece salvar a pasta
     if (!savedDir && !alwaysAsk && !localStorage.getItem("rg_dir_name")) {
-      // Obtém o diretório pai via FileSystem API não exposta diretamente,
-      // então usa showDirectoryPicker como alternativa no modal
-      _pendingDirHandle = null; // reset (usaremos o modal de confirmação diferente)
-      // Mostra modal perguntando se quer definir pasta padrão
+      _pendingDirHandle = null;
       openModal("modal-save-dir");
-      // O nome da pasta sugerida vem do próprio nome do arquivo salvo
       document.getElementById("modal-dir-name").textContent =
         "uma pasta padrão";
     }
   } catch (err) {
-    if (err.name === "AbortError") return; // cancelou — ok
+    if (err.name === "AbortError") return;
     throw err;
   }
 }
@@ -798,8 +758,6 @@ function triggerDownload(blob, filename) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-// ── Preview render ────────────────────────────────────────────
 function schedulePreview() {
   if (!previewOpen) return;
   clearTimeout(previewTimer);
@@ -915,8 +873,6 @@ function renderPreview() {
   }
   paper.innerHTML = html;
 }
-
-// ── Helpers ───────────────────────────────────────────────────
 function toggleSection(header) {
   header.nextElementSibling.classList.toggle("open");
   header.querySelector(".chevron").classList.toggle("open");
@@ -973,19 +929,15 @@ function esc(s) {
 function ea(s) {
   return esc(s);
 }
-
-// ── Tooltip positioning (fixed, never clipped) ────────────
 document.addEventListener("mouseover", (e) => {
   const tip = e.target.closest(".tip");
   if (!tip) return;
   tip.classList.add("tip-open");
   const rect = tip.getBoundingClientRect();
-  // Use a real element trick: set CSS custom props for position
   const bubbleW = 230,
     gap = 10;
   let left = rect.left + rect.width / 2 - bubbleW / 2;
-  let top = rect.top - gap; // will go upward via transform in CSS
-  // Clamp horizontally
+  let top = rect.top - gap;
   left = Math.max(8, Math.min(left, window.innerWidth - bubbleW - 8));
   tip.style.setProperty("--tip-left", left + "px");
   tip.style.setProperty("--tip-top", top + "px");
@@ -993,4 +945,59 @@ document.addEventListener("mouseover", (e) => {
 document.addEventListener("mouseout", (e) => {
   const tip = e.target.closest(".tip");
   if (tip) tip.classList.remove("tip-open");
+});
+function toggleSidebar() {
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  const isOpen = sidebar.classList.toggle("open");
+  overlay.classList.toggle("show", isOpen);
+  document.body.style.overflow = isOpen ? "hidden" : "";
+}
+function closeSidebar() {
+  document.querySelector(".sidebar").classList.remove("open");
+  document.getElementById("sidebar-overlay").classList.remove("show");
+  document.body.style.overflow = "";
+}
+const _origRenderSidebar = renderSidebar;
+const _origSelectProfile = selectProfile;
+window.selectProfile = function (id) {
+  _origSelectProfile(id);
+  if (window.innerWidth < 1024) closeSidebar();
+};
+let mobilePreviewOpen = false;
+function toggleMobilePreview() {
+  mobilePreviewOpen = !mobilePreviewOpen;
+  const modal = document.getElementById("mobile-preview-modal");
+  modal.classList.toggle("open", mobilePreviewOpen);
+  document.body.style.overflow = mobilePreviewOpen ? "hidden" : "";
+  if (mobilePreviewOpen) renderMobilePreview();
+}
+
+function renderMobilePreview() {
+  const desktop = document.getElementById("paper");
+  const mobile = document.getElementById("paper-mobile");
+  if (!mobile) return;
+  if (desktop && desktop.innerHTML) {
+    mobile.innerHTML = desktop.innerHTML;
+    const accent = desktop.style.getPropertyValue("--pac");
+    const muted = desktop.style.getPropertyValue("--pmuted");
+    if (accent) mobile.style.setProperty("--pac", accent);
+    if (muted) mobile.style.setProperty("--pmuted", muted);
+  } else {
+    const p = collectProfile();
+    if (p.name || p.resumo) {
+      const tmp = document.getElementById("paper");
+      renderPreview();
+      mobile.innerHTML = tmp ? tmp.innerHTML : "";
+    }
+  }
+}
+const _origSetDirty = setDirty;
+window.setDirty = function (v) {
+  _origSetDirty(v);
+  const mBtn = document.getElementById("mobile-btn-save");
+  if (mBtn) mBtn.disabled = !v;
+};
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && mobilePreviewOpen) toggleMobilePreview();
 });

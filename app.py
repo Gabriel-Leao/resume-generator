@@ -1,9 +1,3 @@
-"""
-Resume Generator — Flask web app
-Run: python app.py
-Open: http://localhost:5000
-"""
-
 from flask import Flask, render_template, request, jsonify, send_file
 import json, os, uuid, socket, tempfile
 from engine import build
@@ -11,28 +5,23 @@ from engine import build
 app = Flask(__name__)
 DATA_FILE = "data.json"
 
-
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE) as f:
             return json.load(f)
     return {"profiles": []}
 
-
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
 @app.route("/api/profiles", methods=["GET"])
 def get_profiles():
     return jsonify(load_data()["profiles"])
-
 
 @app.route("/api/profiles", methods=["POST"])
 def save_profile():
@@ -48,7 +37,6 @@ def save_profile():
     save_data(data)
     return jsonify({"ok": True, "id": profile["id"]})
 
-
 @app.route("/api/profiles/<pid>", methods=["DELETE"])
 def delete_profile(pid):
     data = load_data()
@@ -56,6 +44,19 @@ def delete_profile(pid):
     save_data(data)
     return jsonify({"ok": True})
 
+@app.route("/api/fonts")
+def list_fonts():
+    """Return available font families from the local fonts/ folder."""
+    import re
+    fonts_dir = "fonts"
+    families = set()
+    if os.path.isdir(fonts_dir):
+        for fn in os.listdir(fonts_dir):
+            if fn.lower().endswith(".ttf"):
+                name = os.path.splitext(fn)[0]
+                name = re.sub(r"[-_](Bold|Italic|Regular|Light|Medium|SemiBold|Black|Thin|ExtraLight|ExtraBold).*$", "", name, flags=re.IGNORECASE)
+                families.add(name)
+    return jsonify(sorted(families))
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
@@ -65,8 +66,6 @@ def generate():
     name       = profile.get("name", "resume").replace(" ", "_")
     version    = profile.get("version", "cv") or "cv"
     filename   = f"{name}_{version}.pdf"
-
-    # Write to a temp file, stream to browser, then delete — nothing stays on disk
     tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     tmp.close()
     try:
@@ -85,7 +84,6 @@ def generate():
         except OSError:
             pass
 
-
 def find_free_port(start=5000, max_attempts=10):
     for port in range(start, start + max_attempts):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -95,7 +93,6 @@ def find_free_port(start=5000, max_attempts=10):
             except OSError:
                 continue
     raise OSError(f"No free port found between {start} and {start + max_attempts - 1}")
-
 
 if __name__ == "__main__":
     port = find_free_port(5000)

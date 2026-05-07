@@ -1,4 +1,3 @@
-/* ── Reset ──────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -7,7 +6,6 @@
   padding: 0;
 }
 
-/* ── Tokens ─────────────────────────────────────────────── */
 :root {
   --bg: #0d1117;
   --surface: #161b27;
@@ -19,7 +17,7 @@
   --text3: #5a6e8c;
   --accent: #5b8def;
   --accent-dim: #172040;
-  --toggle-on: #5b8def; /* always vibrant blue, even in light mode */
+  --toggle-on: #5b8def;
   --green: #34c98b;
   --green-dim: #0c2a1f;
   --red: #f05c62;
@@ -49,7 +47,7 @@
   --text3: #6b85a0;
   --accent: #1b3a6b;
   --accent-dim: #dde6f5;
-  --toggle-on: #5b8def; /* keep vibrant blue in light mode too */
+  --toggle-on: #5b8def;
   --green: #0d7a52;
   --green-dim: #d6f0e6;
   --red: #c0272d;
@@ -57,7 +55,6 @@
   --yellow: #b07a10;
 }
 
-/* ── Base ───────────────────────────────────────────────── */
 html,
 body {
   height: 100%;
@@ -73,7 +70,6 @@ body {
   font-size: 14px;
 }
 
-/* ── Sidebar ────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
@@ -204,7 +200,6 @@ body {
   opacity: 0.6;
 }
 
-/* ── Main ───────────────────────────────────────────────── */
 .main {
   flex: 1;
   display: flex;
@@ -213,7 +208,6 @@ body {
   overflow: hidden;
 }
 
-/* ── Topbar ─────────────────────────────────────────────── */
 .topbar {
   height: 52px;
   border-bottom: 1px solid var(--border);
@@ -264,7 +258,6 @@ body {
   display: block;
 }
 
-/* ── Buttons ────────────────────────────────────────────── */
 .btn {
   font-family: var(--font-ui);
   font-size: 13px;
@@ -311,7 +304,6 @@ body {
   cursor: not-allowed;
 }
 
-/* ── Theme switch ───────────────────────────────────────── */
 .theme-switch {
   display: flex;
   align-items: center;
@@ -334,7 +326,6 @@ body {
   white-space: nowrap;
 }
 
-/* ── Preview toggle button ──────────────────────────────── */
 .btn-preview {
   display: flex;
   align-items: center;
@@ -362,14 +353,12 @@ body {
   color: var(--accent);
 }
 
-/* ── Layout with optional preview ──────────────────────── */
 .body-area {
   flex: 1;
   display: flex;
   overflow: hidden;
 }
 
-/* ── Content / Editor ───────────────────────────────────── */
 .content {
   flex: 1;
   overflow-y: auto;
@@ -387,7 +376,6 @@ body {
   border-radius: 3px;
 }
 
-/* ── Preview panel ──────────────────────────────────────── */
 .preview-panel {
   width: 0;
   flex-shrink: 0;
@@ -424,12 +412,6 @@ body {
   align-self: flex-start;
 }
 
-/*
-  Paper preview: we use zoom to scale the paper down.
-  zoom: 0.636 means 560px * 0.636 = 356px rendered width — fits the panel.
-  zoom correctly affects layout flow (unlike transform: scale).
-  Firefox fallback: transform + manual height calculation.
-*/
 .paper-wrap {
   width: 356px;
   flex-shrink: 0;
@@ -446,14 +428,13 @@ body {
   font-size: 9px;
   line-height: 1.45;
   zoom: 0.636;
-  /* Firefox fallback */
+
   transform-origin: top left;
 }
 [data-theme="light"] .paper {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* Paper internals */
 .paper {
   --pac: #1b3a6b;
   --pmuted: #555;
@@ -598,7 +579,6 @@ body {
   font-size: 12.5px;
 }
 
-/* ── Empty state ────────────────────────────────────────── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -622,7 +602,6 @@ body {
   font-size: 13.5px;
 }
 
-/* ── Section cards ──────────────────────────────────────── */
 .section-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -685,7 +664,6 @@ body {
   color: var(--text3);
 }
 
-/* CSS-only chevron */
 .chevron {
   width: 16px;
   height: 16px;
@@ -737,7 +715,6 @@ body {
   }
 }
 
-/* ── Form fields ────────────────────────────────────────── */
 .grid {
   display: grid;
   gap: 14px;
@@ -820,7 +797,6 @@ body {
   background: var(--surface);
 }
 
-/* ── Repeat items ───────────────────────────────────────── */
 .repeat-item {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -932,7 +908,6 @@ body {
   background: var(--red-dim);
 }
 
-/* ── Generate bar ───────────────────────────────────────── */
 .generate-bar {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -961,7 +936,6 @@ body {
   margin-top: 1px;
 }
 
-/* ── Toggle ─────────────────────────────────────────────── */
 .toggle-row {
   display: flex;
   align-items: center;
@@ -988,7 +962,7 @@ body {
 .toggle-track {
   position: absolute;
   inset: 0;
-  background: var(--border2); /* off state — always visible */
+  background: var(--border2);
   border-radius: 20px;
   cursor: pointer;
   transition: background var(--transition);
@@ -1005,7 +979,7 @@ body {
   transition: transform var(--transition);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
-/* On state — always vibrant blue, visible in both themes */
+
 .toggle input:checked + .toggle-track {
   background: var(--toggle-on);
 }
@@ -1013,7 +987,6 @@ body {
   transform: translateX(16px);
 }
 
-/* ── Font selector ──────────────────────────────────────── */
 .font-select-wrap {
   position: relative;
 }
@@ -1044,7 +1017,6 @@ body {
   border: 1px solid var(--border);
 }
 
-/* ── Font size sliders ──────────────────────────────────── */
 .font-row {
   display: flex;
   align-items: center;
@@ -1087,7 +1059,6 @@ body {
   font-size: 12px !important;
 }
 
-/* ── Toast ──────────────────────────────────────────────── */
 #toast {
   position: fixed;
   bottom: 24px;
@@ -1126,7 +1097,6 @@ body {
   color: var(--accent);
 }
 
-/* ── Botão adicionar seção personalizada ─────────────────── */
 .btn-add-section {
   width: 100%;
   display: flex;
@@ -1151,7 +1121,6 @@ body {
   background: var(--accent-dim);
 }
 
-/* ── Badge seção personalizada ───────────────────────────── */
 .section-custom-badge {
   font-size: 10px;
   font-weight: 500;
@@ -1164,7 +1133,6 @@ body {
   opacity: 0.8;
 }
 
-/* ── Botão excluir seção (no header) ─────────────────────── */
 .btn-section-delete {
   background: none;
   border: 1px solid transparent;
@@ -1186,7 +1154,6 @@ body {
   background: var(--red-dim);
 }
 
-/* ── Modais ──────────────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1269,7 +1236,6 @@ body {
   padding: 0 20px 18px;
 }
 
-/* ── Fix: inputs de listas no dark mode ───────────────────── */
 .bullet-row input,
 .simple-row input {
   background: var(--bg);
@@ -1291,7 +1257,6 @@ body {
   border-color: var(--accent);
 }
 
-/* ── Generate bar (reestruturada) ─────────────────────────── */
 .generate-bar {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1320,7 +1285,6 @@ body {
   margin-top: 1px;
 }
 
-/* ── Progress bar ─────────────────────────────────────────── */
 .progress-wrap {
   display: flex;
   align-items: center;
@@ -1362,7 +1326,6 @@ body {
   text-align: right;
 }
 
-/* ── Botão settings no topbar ─────────────────────────────── */
 .btn-settings {
   background: none;
   border: 1px solid var(--border);
@@ -1383,12 +1346,10 @@ body {
   border-color: var(--border2);
 }
 
-/* ── Modal settings ──────────────────────────────────────── */
 .modal-settings {
   max-width: 480px;
 }
 
-/* ── Settings groups ─────────────────────────────────────── */
 .settings-group {
   margin-bottom: 20px;
 }
@@ -1437,7 +1398,6 @@ body {
   padding: 8px 0 0;
 }
 
-/* ── Aparência do PDF — grid limpo ──────────────────────── */
 .ap-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1465,7 +1425,6 @@ body {
   gap: 5px;
 }
 
-/* Select */
 .ap-select {
   width: 100%;
   background: var(--bg);
@@ -1490,7 +1449,6 @@ body {
   background: var(--surface);
 }
 
-/* Slider row */
 .ap-slider-row {
   display: flex;
   align-items: center;
@@ -1500,7 +1458,6 @@ body {
   flex: 1;
 }
 
-/* Color picker — swatch + hex totalmente isolados */
 .ap-color {
   display: flex;
   align-items: center;
@@ -1537,7 +1494,23 @@ body {
   padding: 0;
 }
 
-/* Badge toggle row */
+.ap-colors-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ap-colors-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.ap-color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
 .ap-item-toggle {
   display: flex;
   flex-direction: row;
@@ -1546,7 +1519,6 @@ body {
   gap: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
-  margin-top: 2px;
 }
 .ap-toggle-label {
   display: flex;
@@ -1568,7 +1540,6 @@ body {
   color: var(--text3);
 }
 
-/* ── Tooltip ─────────────────────────────────────────────── */
 .tip {
   display: inline-flex;
   align-items: center;
@@ -1589,9 +1560,9 @@ body {
     background var(--transition),
     color var(--transition),
     border-color var(--transition);
-  /* isolate stacking context so tooltip is never clipped */
+
   isolation: isolate;
-  /* reset inheritance from field-label (uppercase, tracking) */
+
   text-transform: none;
   letter-spacing: 0;
   font-style: normal;
@@ -1602,7 +1573,6 @@ body {
   color: #fff;
 }
 
-/* Tooltip bubble — fixed dark always, never clipped by overflow */
 .tip::after {
   content: attr(data-tip);
   position: fixed;
@@ -1630,9 +1600,289 @@ body {
   display: block;
 }
 
-/* ── Salvar desabilitado — visível mas inativo ───────────── */
 #btn-save:disabled {
   opacity: 0.35;
   cursor: default;
   pointer-events: none;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.btn-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 34px;
+  height: 34px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 7px 6px;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+.btn-hamburger:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+}
+.btn-hamburger span {
+  display: block;
+  height: 2px;
+  background: var(--text2);
+  border-radius: 2px;
+  transition: all var(--transition);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.show {
+  display: block;
+}
+
+.mobile-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  padding: 0 4px;
+  align-items: stretch;
+}
+.mobile-bar-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  margin: 6px 2px;
+  transition: all var(--transition);
+}
+.mobile-bar-btn:hover,
+.mobile-bar-btn:active {
+  background: var(--surface2);
+  color: var(--text);
+}
+.mobile-bar-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.mobile-bar-primary {
+  background: var(--green);
+  color: #fff !important;
+  border-radius: var(--radius-sm);
+}
+.mobile-bar-primary:hover {
+  opacity: 0.88;
+  background: var(--green) !important;
+}
+
+.mobile-preview-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--bg);
+  flex-direction: column;
+}
+.mobile-preview-modal.open {
+  display: flex;
+}
+.mobile-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.mobile-preview-header button {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  transition: all var(--transition);
+}
+.mobile-preview-header button:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.mobile-preview-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform var(--transition);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .preview-panel {
+    display: none !important;
+  }
+  .btn-preview {
+    display: none;
+  }
+  .topbar-divider {
+    display: none;
+  }
+
+  .btn-hamburger {
+    display: flex;
+  }
+
+  .content {
+    padding: 20px 20px 100px;
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .mobile-bar {
+    display: flex;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    width: 280px;
+  }
+
+  .topbar-actions {
+    display: none !important;
+  }
+  .btn-settings {
+    width: 30px;
+    height: 30px;
+  }
+
+  .content {
+    padding: 16px 12px 80px;
+  }
+
+  .section-card {
+    border-radius: var(--radius);
+  }
+  .section-header {
+    padding: 12px 14px;
+  }
+  .section-body {
+    padding: 0 14px 14px;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .col-span-2 {
+    grid-column: span 1;
+  }
+
+  .ap-grid {
+    grid-template-columns: 1fr;
+  }
+  .ap-item-full {
+    grid-column: span 1;
+  }
+
+  .ap-colors-row {
+    grid-template-columns: 1fr;
+  }
+
+  .generate-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .generate-bar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .repeat-item {
+    padding: 12px 10px 14px;
+  }
+
+  .section-header-left {
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 12.5px;
+  }
+
+  .topbar-title {
+    font-size: 13px;
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 479px) {
+  .topbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .content {
+    padding: 12px 10px 80px;
+  }
+  .section-header {
+    padding: 11px 12px;
+  }
+  .section-body {
+    padding: 0 12px 12px;
+  }
+  .btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+  .section-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 9px;
+  }
 }

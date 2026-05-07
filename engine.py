@@ -1,7 +1,3 @@
-"""
-PDF generation engine — called by app.py, not run directly.
-"""
-
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib import colors
@@ -16,8 +12,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from datetime import date
 import os, re
-
-# ── Font registration ──────────────────────────────────────────────────────────
 
 def _find_font(name):
     local = os.path.join("fonts", name)
@@ -35,7 +29,7 @@ def _find_font(name):
         "Download Inter from https://rsms.me/inter/ and put the .ttf files in fonts/"
     )
 
-_registered_fonts: dict = {}   # cache: family_name → (R, RB, RI) internal names
+_registered_fonts: dict = {}
 _fonts_registered = False
 
 def _register_family(family: str) -> tuple[str, str, str]:
@@ -52,7 +46,6 @@ def _register_family(family: str) -> tuple[str, str, str]:
     ri_name = f"{slug}_RI"
 
     try:
-        # Try local fonts/ folder first
         variants = _find_font_variants_local(family)
         if not variants:
             variants = _find_font_variants_system(family)
@@ -63,12 +56,10 @@ def _register_family(family: str) -> tuple[str, str, str]:
         pdfmetrics.registerFont(TTFont(rb_name, variants["bold"]))
         pdfmetrics.registerFont(TTFont(ri_name, variants["italic"]))
     except Exception:
-        # Fall back to default fonts
         return _get_default_fonts()
 
     _registered_fonts[family] = (r_name, rb_name, ri_name)
     return r_name, rb_name, ri_name
-
 
 def _find_font_variants_local(family: str) -> dict | None:
     """Look for Regular/Bold/Italic files in fonts/ folder matching the family."""
@@ -97,7 +88,6 @@ def _find_font_variants_local(family: str) -> dict | None:
         return None
     return result
 
-
 def _find_font_variants_system(family: str) -> dict | None:
     """Use fc-match to find Regular/Bold/Italic system font files."""
     import subprocess
@@ -113,7 +103,6 @@ def _find_font_variants_system(family: str) -> dict | None:
                 text=True, stderr=subprocess.DEVNULL
             ).strip()
             if out and (out.endswith(".ttf") or out.endswith(".otf")):
-                # Verify it's actually the requested family (fc-match falls back)
                 verify = subprocess.check_output(
                     ["fc-match", f"{family}:style={fc_style}", "--format=%{family}"],
                     text=True, stderr=subprocess.DEVNULL
@@ -123,7 +112,6 @@ def _find_font_variants_system(family: str) -> dict | None:
         except (FileNotFoundError, subprocess.CalledProcessError):
             pass
     return result if len(result) == 3 else None
-
 
 def _get_default_fonts() -> tuple[str, str, str]:
     """Register and return the default Liberation Sans / Inter fonts."""
@@ -136,11 +124,8 @@ def _get_default_fonts() -> tuple[str, str, str]:
         _fonts_registered = True
     return "R", "RB", "RI"
 
-
 def ensure_fonts():
     _get_default_fonts()
-
-# ── Duration calculator ────────────────────────────────────────────────────────
 
 def calc_duration(start_str, end_str=None):
     def parse(s):
@@ -156,39 +141,28 @@ def calc_duration(start_str, end_str=None):
         return f"{years} {'ano' if years == 1 else 'anos'}"
     else:
         return f"{years} {'ano' if years == 1 else 'anos'} e {rem} {'mês' if rem == 1 else 'meses'}"
-
-# ── Build ──────────────────────────────────────────────────────────────────────
-
-# How many items to keep with the section header before allowing breaks
 KEEP_WITH_HEADER = 2
 
 def build(data, output_path, show_badge=True):
     ensure_fonts()
-
-    # ── Font ──────────────────────────────────────────────────────────────────
     family = data.get("font_family", "").strip()
     if family:
         FR, FRB, FRI = _register_family(family)
     else:
         FR, FRB, FRI = _get_default_fonts()
-
-    # ── Colors ────────────────────────────────────────────────────────────────
     ACCENT = colors.HexColor(data.get("theme_accent", "#1B3A6B"))
     BODY   = colors.HexColor(data.get("theme_body",   "#111111"))
     MUTED  = colors.HexColor(data.get("theme_muted",  "#555555"))
     WHITE  = colors.white
-
-    # ── Sizes — defaults match previous behaviour ─────────────────────────────
-    # font_size kept for backwards compat; font_size_body overrides it
     FS_BODY  = float(data.get("font_size_body",  data.get("font_size", 9)))
-    FS_TITLE = float(data.get("font_size_title", FS_BODY * 2.4))   # default: name ~21.6pt at 9pt body
+    FS_TITLE = float(data.get("font_size_title", FS_BODY * 2.4))
 
     PAGE_W, _ = letter
     MX     = 0.55 * inch
     MY     = 0.50 * inch
     CW     = PAGE_W - 2 * MX
     INDENT = 0.30 * inch
-    FS     = FS_BODY   # shorthand used in spacers / badge
+    FS     = FS_BODY
 
     def s(name, **kw):
         d = dict(fontName=FR, fontSize=FS_BODY, textColor=BODY, leading=FS_BODY * 1.45,
@@ -295,8 +269,6 @@ def build(data, output_path, show_badge=True):
         ]], colWidths=[EL, CW - INDENT - EL])
         row.setStyle(NO_STYLE)
         return iblock(row)
-
-    # ── Smart KeepTogether helper ────────────────────────────────────────────
     def section_blocks(header_el, items, spacer_between=6, trailing_spacer=5):
         """
         Returns a list of flowables for a section, applying KeepTogether
@@ -307,24 +279,17 @@ def build(data, output_path, show_badge=True):
             return [header_el, sp(trailing_spacer), divider()]
 
         flowables = []
-        # First group: header + first N items always together
         anchor = [header_el]
         for item in items[:KEEP_WITH_HEADER]:
             anchor.append(item)
         flowables.append(KeepTogether(anchor))
-
-        # Remaining items: each wrapped in KeepTogether to avoid splitting mid-item
         for item in items[KEEP_WITH_HEADER:]:
             flowables.append(KeepTogether([sp(spacer_between), item]))
 
         flowables += [sp(trailing_spacer), divider()]
         return flowables
-
-    # ── Story ────────────────────────────────────────────────────────────────
     story = []
     accent_hex = data.get("theme_accent", "#1B3A6B")
-
-    # Header — always kept together
     story.append(KeepTogether([
         Paragraph(data["name"], ST["name"]),
         sp(2),
@@ -338,30 +303,20 @@ def build(data, output_path, show_badge=True):
         ),
         sp(5), divider(),
     ]))
-
-    # Resumo — always together
     story.append(KeepTogether([
         hdr("Resumo Profissional"),
         iblock(Paragraph(data["resumo"], ST["body"])),
         sp(5), divider(),
     ]))
-
-    # Experiência
     exp_items = [job_row(job) for job in data["experience"]]
     story += section_blocks(hdr("Histórico Profissional"), exp_items, spacer_between=6)
-
-    # Tecnologias — short list, always together
     story.append(KeepTogether([
         hdr("Tecnologias"),
         iblock([bul(t) for t in data["technologies"]]),
         sp(5), divider(),
     ]))
-
-    # Formação
     edu_items = [edu_row(edu) for edu in data["education"]]
     story += section_blocks(hdr("Formação Acadêmica"), edu_items, spacer_between=4)
-
-    # Habilidades — always together
     half  = len(data["skills"]) // 2 + len(data["skills"]) % 2
     inner = Table(
         [[[bul(s) for s in data["skills"][:half]],
@@ -374,8 +329,6 @@ def build(data, output_path, show_badge=True):
         iblock(inner),
         sp(5), divider(),
     ]))
-
-    # Idiomas — always together
     story.append(KeepTogether([
         hdr("Idiomas"),
         iblock([Paragraph(l, ST["body"]) for l in data["languages"]]),
