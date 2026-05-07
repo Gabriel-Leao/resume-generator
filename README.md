@@ -1,6 +1,6 @@
 # 📄 Resume Generator
 
-Gere currículos profissionais em PDF direto pelo navegador.  
+Gere currículos profissionais em PDF direto pelo navegador.
 Interface web local — seus dados ficam salvos no seu computador, nunca vão para nenhum servidor.
 
 ---
@@ -9,13 +9,16 @@ Interface web local — seus dados ficam salvos no seu computador, nunca vão pa
 
 ```
 resume-generator/
-├── fonts/              # coloque os .ttf aqui (ver Fonte customizada)
+├── fonts/              # fontes .ttf para o PDF (Inter já incluído)
 ├── output/             # PDFs gerados (criado automaticamente, gitignored)
+├── static/
+│   ├── style.css       # estilos da interface
+│   └── main.js         # lógica do frontend
 ├── templates/
 │   └── index.html      # interface web
 ├── app.py              # servidor Flask
 ├── engine.py           # geração do PDF (ReportLab)
-├── data.json           # seus dados salvos — criado automaticamente, gitignored
+├── data.json           # perfis salvos — criado automaticamente, gitignored
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -26,64 +29,76 @@ resume-generator/
 ## Setup
 
 **1. Clone o repositório**
+
 ```bash
 git clone https://github.com/seu-usuario/resume-generator
 cd resume-generator
 ```
 
 **2. Crie e ative o ambiente virtual**
+
 ```bash
-# Criar
 python -m venv .venv
 
-# Ativar — macOS / Linux
+# macOS / Linux
 source .venv/bin/activate
 
-# Ativar — Windows
+# Windows
 .venv\Scripts\activate
 ```
 
-> O `.venv` é o equivalente do `node_modules` — isola as dependências por projeto.  
-> Está no `.gitignore`, então cada pessoa cria o seu após clonar.
-
 **3. Instale as dependências**
+
 ```bash
 pip install -r requirements.txt
 ```
 
 **4. Rode**
+
 ```bash
 python app.py
 ```
 
-A porta é escolhida automaticamente a partir da 5000. Se já estiver em uso, tenta 5001, 5002, e assim por diante. A porta escolhida aparece no terminal:
+A porta é escolhida automaticamente a partir da 5000. A escolhida aparece no terminal:
 
 ```
 ✅  Abrindo em http://localhost:5001
 ```
 
-**5. Abra no navegador**
-
-Use o endereço exibido no terminal. No macOS, prefira `http://127.0.0.1:PORTA` caso `localhost` não funcione.
-
 ---
 
 ## Como usar
 
-1. Clique em **+ Novo perfil** na barra lateral
-2. Preencha o **Nome do perfil** (como vai aparecer na sidebar, ex: "Gabriel — Pleno") e as informações pessoais
-3. Clique em **Salvar** — os dados ficam em `data.json` na sua máquina
-4. Ative ou desative o **badge de tempo** conforme preferir
-5. Clique em **Gerar PDF** — o download começa automaticamente
+**Perfis**
 
-Você pode ter quantos perfis quiser (ex: um por nível de senioridade).  
-O badge de duração é calculado automaticamente toda vez que você gera — nunca fica desatualizado.
+Cada perfil é uma versão do seu currículo — você pode ter quantos quiser (ex: um por nível de senioridade, um por área). Eles ficam salvos em `data.json` na sua máquina.
+
+1. Clique em **+ Novo perfil** na barra lateral
+2. Preencha a identificação, informações pessoais e demais seções
+3. Clique em **Salvar** — o botão só fica ativo quando há alterações não salvas
+4. Clique em **Gerar PDF**
+
+**Aparência**
+
+Cada perfil tem suas próprias configurações de aparência: fonte, tamanhos, cores e badge de tempo. O badge calcula automaticamente a duração de cada experiência toda vez que você gera — nunca fica desatualizado.
+
+**Seções personalizadas**
+
+No final do editor há um botão para adicionar seções livres (ex: Certificações, Projetos, Voluntariado). Ao criar, você escolhe se quer replicar para todos os CVs. Ao excluir, idem.
+
+**Preview**
+
+Clique em **Preview** no canto superior direito para ver o CV em tempo real enquanto edita. No celular ou tablet, o preview abre em tela cheia pelo botão na barra inferior.
+
+**Download**
+
+No Chrome e Edge, você pode escolher onde salvar o PDF. Na primeira vez, o app pergunta se quer guardar essa pasta como padrão — próximos downloads vão direto para lá. Você pode alterar ou limpar essa configuração em **Configurações**.
 
 ---
 
 ## Campos obrigatórios
 
-Os seguintes campos precisam ser preenchidos para salvar ou gerar um PDF:
+Para salvar ou gerar um PDF, os seguintes campos precisam estar preenchidos:
 
 - Nome do perfil
 - Nome completo
@@ -94,25 +109,39 @@ Os seguintes campos precisam ser preenchidos para salvar ou gerar um PDF:
 
 ---
 
-## Fonte customizada (Inter recomendado)
+## Fontes
 
-O padrão é **Liberation Sans** — sans-serif limpa, sem instalação necessária.
+O projeto já inclui **Inter** na pasta `fonts/` — ela é detectada automaticamente e usada como padrão no PDF.
 
-Para usar Inter:
+Para adicionar outras fontes, coloque os arquivos `.ttf` na pasta `fonts/` e reinicie o servidor. Elas aparecerão no seletor de fonte dentro de Aparência. O engine procura automaticamente pelos arquivos `Regular`, `Bold` e `Italic` da família.
 
-1. Baixe em [rsms.me/inter](https://rsms.me/inter/)
-2. Coloque estes 3 arquivos na pasta `fonts/`:
-   - `Inter-Regular.ttf`
-   - `Inter-Bold.ttf`
-   - `Inter-Italic.ttf`
-3. Reinicie o servidor — detectado automaticamente.
+Se nenhuma fonte local for encontrada, o fallback é **Liberation Sans**.
+
+---
+
+## Responsivo
+
+A interface funciona em desktop, tablet e celular.
+
+- **Tablet / mobile**: a barra lateral vira um drawer deslizante acessível pelo botão de menu
+- **Mobile**: uma barra inferior fixa dá acesso rápido a Perfis, Salvar, Gerar PDF e Preview
+- **Preview no mobile**: abre em tela cheia com botão de fechar
+
+---
+
+## Configurações
+
+O ícone de engrenagem no canto superior direito abre as configurações globais:
+
+- **Tema** — claro ou escuro
+- **Pasta de download** — define onde os PDFs são salvos (Chrome/Edge)
+- **Perguntar sempre onde salvar** — ignora a pasta salva e abre o diálogo a cada geração
 
 ---
 
 ## Dados privados
 
-`data.json` está no `.gitignore` — seus dados pessoais (telefone, e-mail, etc.) **nunca são commitados**.  
-Cada pessoa que clonar o projeto começa com dados vazios e preenche os seus.
+`data.json` está no `.gitignore` — seus dados pessoais nunca são commitados. Cada pessoa que clonar o projeto começa com dados vazios.
 
 ---
 
