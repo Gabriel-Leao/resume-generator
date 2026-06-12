@@ -96,19 +96,67 @@ function togglePreview() {
 }
 function renderSidebar() {
   const el = document.getElementById("profile-list");
+  const search = document.getElementById("profile-search");
+  const searchWrap = document.getElementById("sidebar-search");
+  if (searchWrap) {
+    searchWrap.style.display = profiles.length ? "flex" : "none";
+  }
+  if (search && search.value.trim()) {
+    filterProfiles();
+    return;
+  }
   if (!profiles.length) {
     el.innerHTML = `<div style="padding:12px 10px;font-size:12px;color:var(--text3)">Nenhum perfil ainda</div>`;
     return;
   }
-  el.innerHTML = profiles
-    .map(
-      (p) => `
+  el.innerHTML = profiles.map((p) => profileCardHtml(p)).join("");
+}
+function profileCardHtml(p) {
+  return `
     <div class="profile-card ${p.id === activeId ? "active" : ""}" onclick="selectProfile('${p.id}')">
       <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")}</div>
-      <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + p.version : ""}</div>
-    </div>`,
-    )
-    .join("");
+      <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + esc(p.version) : ""}</div>
+    </div>`;
+}
+function trashCardHtml(p) {
+  return `
+    <div class="profile-card trash-result" onclick="openTrash()">
+      <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")} <span class="trash-badge">Lixeira</span></div>
+      <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + esc(p.version) : ""}</div>
+    </div>`;
+}
+function matchesQuery(p, q) {
+  return [p.label, p.name, p.version]
+    .filter(Boolean)
+    .some((v) => v.toLowerCase().includes(q));
+}
+function filterProfiles() {
+  const el = document.getElementById("profile-list");
+  const search = document.getElementById("profile-search");
+  const q = (search?.value || "").trim().toLowerCase();
+  if (!q) {
+    renderSidebar();
+    return;
+  }
+  const matches = profiles.filter((p) => matchesQuery(p, q));
+  const includeTrash =
+    document.getElementById("search-include-trash")?.checked &&
+    trashItems.length > 0;
+  const trashMatches = includeTrash
+    ? trashItems.filter((p) => matchesQuery(p, q))
+    : [];
+
+  if (!matches.length && !trashMatches.length) {
+    el.innerHTML = `<div class="search-empty">Não foi possível encontrar currículo com esse título.</div>`;
+    return;
+  }
+
+  let html = matches.map((p) => profileCardHtml(p)).join("");
+  if (trashMatches.length) {
+    html += `<div class="sidebar-section">Na lixeira</div>`;
+    html += trashMatches.map((p) => trashCardHtml(p)).join("");
+  }
+  el.innerHTML = html;
 }
 
 function selectProfile(id) {
@@ -670,10 +718,12 @@ function resetToEmpty() {
 }
 
 /* ── Lixeira ────────────────────────────────────────────────── */
+let trashItems = [];
 function refreshTrashCount() {
   fetch("/api/trash")
     .then((r) => r.json())
     .then((items) => {
+      trashItems = items;
       const badge = document.getElementById("trash-count");
       if (items.length) {
         badge.textContent = items.length;
@@ -681,6 +731,12 @@ function refreshTrashCount() {
       } else {
         badge.style.display = "none";
       }
+      const toggleWrap = document.getElementById("search-trash-toggle-wrap");
+      if (toggleWrap) {
+        toggleWrap.style.display = items.length ? "flex" : "none";
+      }
+      const search = document.getElementById("profile-search");
+      if (search && search.value.trim()) filterProfiles();
     })
     .catch(() => {});
 }
