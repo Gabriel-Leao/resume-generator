@@ -7,7 +7,6 @@ let previewOpen = false,
 let _deleteSectionId = null,
   _deleteSectionEl = null;
 let _nextSectionId = 1;
-//   rg_dir_name    — display name of saved dir (e.g. "Downloads")
 
 const supportsFilePicker = !!window.showSaveFilePicker;
 function idbOpen() {
@@ -70,6 +69,7 @@ fetch("/api/profiles")
     renderSidebar();
     if (profiles.length > 0) selectProfile(profiles[0].id);
   });
+refreshTrashCount();
 function toggleTheme() {
   const next =
     document.documentElement.getAttribute("data-theme") === "dark"
@@ -137,6 +137,7 @@ function newProfile() {
     technologies: [],
     education: [],
     skills: [],
+    projects: [],
     languages: [],
     custom_sections: [],
     font_family: "",
@@ -203,11 +204,34 @@ function loadEditor(p) {
   (p.experience || []).forEach(addExperience);
   document.getElementById("edu-list").innerHTML = "";
   (p.education || []).forEach(addEducation);
-  renderSimpleList("tech-list", p.technologies || []);
-  renderSimpleList("skills-list", p.skills || []);
   renderSimpleList("lang-list", p.languages || []);
+  document.getElementById("tech-groups").innerHTML = "";
+  const techData = p.technologies || [];
+  if (techData.length && typeof techData[0] === "object") {
+    techData.forEach(g => addTechGroup(g));
+  } else if (techData.length) {
+    techData.forEach(line => {
+      const colon = line.indexOf(":");
+      if (colon > -1) {
+        addTechGroup({ title: line.slice(0, colon).trim(), items: line.slice(colon + 1).split(",").map(s => s.trim()).filter(Boolean) });
+      } else {
+        addTechGroup({ title: "", items: [line] });
+      }
+    });
+  } else {
+    addTechGroup();
+  }
+  renderSimpleList("skills-list", (() => {
+    const sd = p.skills || [];
+    if (!sd.length) return [];
+    if (typeof sd[0] === "object") return sd.flatMap(g => g.items || []);
+    return sd;
+  })());
+  document.getElementById("proj-list").innerHTML = "";
+  (p.projects || []).forEach(addProject);
   updateCount("exp-count", (p.experience || []).length);
   updateCount("edu-count", (p.education || []).length);
+  updateCount("proj-count", (p.projects || []).length);
   document.getElementById("custom-sections-container").innerHTML = "";
   (p.custom_sections || []).forEach((cs) => renderCustomSection(cs));
   if (previewOpen) renderPreview();
@@ -318,6 +342,76 @@ function getSimpleList(id) {
   return [...document.querySelectorAll(`#${id} input`)]
     .map((i) => i.value.trim())
     .filter(Boolean);
+}
+function addSkillGroup(data = {}) {
+  const el = document.createElement("div");
+  el.className = "skill-group";
+  el.innerHTML = `
+    <div class="skill-group-header">
+      <input class="skill-group-title" type="text" value="${ea(data.title || "")}" placeholder="Frontend, Backend, Ferramentas...">
+      <button class="btn-rm-bullet" onclick="this.closest('.skill-group').remove()">✕</button>
+    </div>
+    <div class="skill-items simple-list"></div>
+    <button class="btn-add-item" style="margin-top:4px" onclick="addSimpleToEl(this.previousElementSibling,'')">+ item</button>`;
+  document.getElementById("skills-groups").appendChild(el);
+  const list = el.querySelector(".skill-items");
+  (data.items || []).forEach(v => addSimpleToEl(list, v));
+  if (!(data.items || []).length) addSimpleToEl(list, "");
+}
+function addTechGroup(data = {}) {
+  const el = document.createElement("div");
+  el.className = "skill-group";
+  el.innerHTML = `
+    <div class="skill-group-header">
+      <input class="skill-group-title" type="text" value="${ea(data.title || "")}" placeholder="Frontend, Backend, Ferramentas...">
+      <button class="btn-rm-bullet" onclick="this.closest('.skill-group').remove()">✕</button>
+    </div>
+    <div class="skill-items simple-list"></div>
+    <button class="btn-add-item" style="margin-top:4px" onclick="addSimpleToEl(this.previousElementSibling,'')">+ item</button>`;
+  document.getElementById("tech-groups").appendChild(el);
+  const list = el.querySelector(".skill-items");
+  (data.items || []).forEach(v => addSimpleToEl(list, v));
+  if (!(data.items || []).length) addSimpleToEl(list, "");
+}
+function addSimpleToEl(list, v = "") {
+  const r = document.createElement("div");
+  r.className = "simple-row";
+  r.innerHTML = `<input type="text" value="${ea(v)}" placeholder="...">
+    <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(r);
+}
+function addProject(data = {}) {
+  const el = document.createElement("div");
+  el.className = "repeat-item proj-card";
+  const idx = document.querySelectorAll("#proj-list .repeat-item").length + 1;
+  el.innerHTML = `
+    <div class="repeat-item-header">
+      <span class="repeat-item-num">Proj ${idx}</span>
+      <button class="btn-remove-item" onclick="removeRepeat(this,'proj-list','proj-count')">✕ remover</button>
+    </div>
+    <div class="field"><label class="field-label">Nome do projeto</label>
+      <input class="proj-name" type="text" value="${ea(data.name)}" placeholder="Meu Projeto"></div>
+    <div class="field"><label class="field-label">Descrição</label>
+      <textarea class="proj-desc" rows="2" placeholder="Breve descrição do projeto e suas features...">${ea(data.description)}</textarea></div>
+    <div class="proj-links-box">
+      <label class="field-label">Links</label>
+      <div class="proj-links-list"></div>
+      <button class="btn-add-item proj-add-link" onclick="addProjectLink(this.previousElementSibling)">+ Adicionar link</button>
+    </div>`;
+  document.getElementById("proj-list").appendChild(el);
+  const linksEl = el.querySelector(".proj-links-list");
+  (data.links || []).forEach(l => addProjectLinkTo(linksEl, l));
+  if (!(data.links || []).length) addProjectLinkTo(linksEl, {});
+  updateCount("proj-count", document.querySelectorAll("#proj-list .repeat-item").length);
+}
+function addProjectLink(list) { addProjectLinkTo(list, {}); }
+function addProjectLinkTo(list, data = {}) {
+  const r = document.createElement("div");
+  r.className = "proj-link-row";
+  r.innerHTML = `<input class="proj-link-label" type="text" value="${ea(data.label)}" placeholder="Produção, Código, Demo..." list="proj-link-suggestions">
+    <input class="proj-link-url" type="text" value="${ea(data.url)}" placeholder="https://...">
+    <button class="btn-rm-bullet" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(r);
 }
 function openAddSectionModal() {
   document.getElementById("new-section-name").value = "";
@@ -445,8 +539,20 @@ function collectProfile() {
     resumo: G("f-resumo"),
     experience,
     education,
-    technologies: getSimpleList("tech-list"),
+    technologies: [...document.querySelectorAll("#tech-groups .skill-group")].map(el => ({
+      title: el.querySelector(".skill-group-title").value.trim(),
+      items: [...el.querySelectorAll(".skill-items input")].map(i => i.value.trim()).filter(Boolean),
+    })).filter(g => g.items.length),
     skills: getSimpleList("skills-list"),
+    projects: [...document.querySelectorAll("#proj-list .repeat-item")].map(el => ({
+      name: el.querySelector(".proj-name").value.trim(),
+      description: el.querySelector(".proj-desc").value.trim(),
+      links: [...el.querySelectorAll(".proj-link-row")].map(r => ({
+        label: r.querySelector(".proj-link-label").value.trim(),
+        url: r.querySelector(".proj-link-url").value.trim(),
+      })).filter(r => r.url),
+      techs: [],
+    })).filter(p => p.name),
     languages: getSimpleList("lang-list"),
     custom_sections,
     font_family: G("f-font-family"),
@@ -539,11 +645,11 @@ function saveProfile() {
     });
 }
 function deleteProfile() {
-  if (!confirm("Excluir este perfil permanentemente?")) return;
   if (!activeId) {
     resetToEmpty();
     return;
   }
+  if (!confirm("Mover este perfil para a lixeira? Você poderá restaurá-lo em até 30 dias.")) return;
   fetch(`/api/profiles/${activeId}`, { method: "DELETE" })
     .then(() => fetch("/api/profiles").then((r) => r.json()))
     .then((data) => {
@@ -551,7 +657,8 @@ function deleteProfile() {
       activeId = null;
       renderSidebar();
       resetToEmpty();
-      toast("Perfil excluído");
+      refreshTrashCount();
+      toast("Perfil movido para a lixeira");
     });
 }
 function resetToEmpty() {
@@ -560,6 +667,90 @@ function resetToEmpty() {
   document.getElementById("topbar-actions").style.display = "none";
   document.getElementById("topbar-title").textContent = "Resume Generator";
   setDirty(false);
+}
+
+/* ── Lixeira ────────────────────────────────────────────────── */
+function refreshTrashCount() {
+  fetch("/api/trash")
+    .then((r) => r.json())
+    .then((items) => {
+      const badge = document.getElementById("trash-count");
+      if (items.length) {
+        badge.textContent = items.length;
+        badge.style.display = "inline-flex";
+      } else {
+        badge.style.display = "none";
+      }
+    })
+    .catch(() => {});
+}
+
+function daysRemaining(deletedAt) {
+  const deleted = new Date(deletedAt);
+  const expires = new Date(deleted.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const diff = Math.ceil((expires - new Date()) / (24 * 60 * 60 * 1000));
+  return Math.max(0, diff);
+}
+
+function openTrash() {
+  fetch("/api/trash")
+    .then((r) => r.json())
+    .then((items) => {
+      renderTrash(items);
+      openModal("modal-trash");
+    });
+}
+
+function renderTrash(items) {
+  const el = document.getElementById("trash-list");
+  if (!items.length) {
+    el.innerHTML = `<div style="padding:20px 4px;text-align:center;color:var(--text3);font-size:12.5px">A lixeira está vazia.</div>`;
+    return;
+  }
+  el.innerHTML = items
+    .map((p) => {
+      const days = daysRemaining(p.deleted_at);
+      return `
+    <div class="trash-item" data-id="${p.id}">
+      <div class="trash-item-info">
+        <div class="trash-item-label">${esc(p.label || p.name || "Sem nome")}</div>
+        <div class="trash-item-meta">${esc(p.name || "")}${p.version ? " · " + esc(p.version) : ""} · expira em ${days} dia${days === 1 ? "" : "s"}</div>
+      </div>
+      <div class="trash-item-actions">
+        <button class="btn btn-ghost" onclick="restoreFromTrash('${p.id}')">Restaurar</button>
+        <button class="btn btn-danger" onclick="deletePermanently('${p.id}')">Apagar definitivamente</button>
+      </div>
+    </div>`;
+    })
+    .join("");
+}
+
+function restoreFromTrash(id) {
+  fetch(`/api/trash/${id}/restore`, { method: "POST" })
+    .then((r) => r.json())
+    .then(() => Promise.all([
+      fetch("/api/profiles").then((r) => r.json()),
+      fetch("/api/trash").then((r) => r.json()),
+    ]))
+    .then(([profilesData, trashData]) => {
+      profiles = profilesData;
+      renderSidebar();
+      renderTrash(trashData);
+      refreshTrashCount();
+      toast("Perfil restaurado!", "success");
+    });
+}
+
+function deletePermanently(id) {
+  if (!confirm("Apagar este perfil definitivamente? Essa ação não pode ser desfeita.")) return;
+  fetch(`/api/trash/${id}`, { method: "DELETE" })
+    .then((r) => r.json())
+    .then(() => fetch("/api/trash").then((r) => r.json()))
+    .then((trashData) => {
+      renderTrash(trashData);
+      refreshTrashCount();
+      toast("Perfil apagado definitivamente");
+    });
 }
 let _progressTimer = null;
 function showProgress(pct, label) {
@@ -657,12 +848,29 @@ async function confirmSaveDir() {
     _pendingDirHandle = null;
   }
 }
-async function generate() {
+async function saveAndGenerate() {
+  closeModal("modal-unsaved-generate");
+  saveProfile();
+  await generate(collectProfile());
+}
+async function generateWithoutSaving() {
+  closeModal("modal-unsaved-generate");
+  if (!_savedSnapshot) {
+    toast("Nenhuma versão salva encontrada", "error");
+    return;
+  }
+  await generate(JSON.parse(_savedSnapshot));
+}
+async function generate(forceProfile = null) {
   if (!validate()) {
     toast("Corrija os campos obrigatórios antes de gerar", "error");
     return;
   }
-  const profile = collectProfile();
+  if (!forceProfile && isDirty) {
+    openModal("modal-unsaved-generate");
+    return;
+  }
+  const profile = forceProfile || collectProfile();
   const show_badge = document.getElementById("f-badge").checked;
   const btn = document.getElementById("btn-generate");
   const namePart = (profile.name || "resume").replace(/\s+/g, "_");
@@ -839,8 +1047,17 @@ function renderPreview() {
     });
     html += `<hr class="p-divider">`;
   }
-  if (p.technologies.length)
-    html += `<div class="p-section">Tecnologias</div><div class="p-indent">${p.technologies.map((t) => `<div class="p-bullet">${h(t)}</div>`).join("")}</div><hr class="p-divider">`;
+  const techGroups = (p.technologies || []).filter(g => typeof g === "object" && g.items && g.items.length);
+  const techFlat = (p.technologies || []).filter(g => typeof g === "string");
+  if (techGroups.length) {
+    html += `<div class="p-section">Tecnologias</div><div class="p-indent">`;
+    techGroups.forEach(g => {
+      html += `<div class="p-skills-group"><span class="p-skills-group-title">${h(g.title || "")}</span><div class="p-skills-inline">${g.items.map(s => `<span class="p-skill-tag">${h(s)}</span>`).join("")}</div></div>`;
+    });
+    html += `</div><hr class="p-divider">`;
+  } else if (techFlat.length) {
+    html += `<div class="p-section">Tecnologias</div><div class="p-indent">${techFlat.map((t) => `<div class="p-bullet">${h(t)}</div>`).join("")}</div><hr class="p-divider">`;
+  }
   if (p.education.length) {
     html += `<div class="p-section">Formação Acadêmica</div>`;
     p.education.forEach((edu, i) => {
@@ -850,18 +1067,29 @@ function renderPreview() {
     });
     html += `<hr class="p-divider">`;
   }
-  if (p.skills.length) {
-    const half = Math.ceil(p.skills.length / 2);
+  const skillsFlat = (p.skills || []).filter(g => typeof g === "string");
+  const skillsGrouped = (p.skills || []).filter(g => typeof g === "object" && g.items && g.items.length);
+  const allSkills = skillsFlat.length ? skillsFlat : skillsGrouped.flatMap(g => g.items || []);
+  if (allSkills.length) {
+    const half = Math.ceil(allSkills.length / 2);
     html += `<div class="p-section">Habilidades e Competências</div><div class="p-indent"><div class="p-skills-grid">
-      <div>${p.skills
-        .slice(0, half)
-        .map((s) => `<div class="p-bullet">${h(s)}</div>`)
-        .join("")}</div>
-      <div>${p.skills
-        .slice(half)
-        .map((s) => `<div class="p-bullet">${h(s)}</div>`)
-        .join("")}</div>
+      <div>${allSkills.slice(0, half).map(s => `<div class="p-bullet">${h(s)}</div>`).join("")}</div>
+      <div>${allSkills.slice(half).map(s => `<div class="p-bullet">${h(s)}</div>`).join("")}</div>
     </div></div><hr class="p-divider">`;
+  }
+  if ((p.projects || []).filter(pr => pr.name).length) {
+    html += `<div class="p-section">Projetos</div>`;
+    p.projects.filter(pr => pr.name).forEach((pr, i) => {
+      if (i > 0) html += `<div style="height:6px"></div>`;
+      const links = (pr.links || []).filter(l => l.url);
+      const linksHtml = links.map(l => `<a class="p-proj-link" href="${h(l.url)}">${h(l.label || l.url)}</a>`).join(`<span class="p-proj-link-sep">·</span>`);
+      html += `<div class="p-indent p-proj">
+        <div class="p-proj-name">${h(pr.name)}</div>
+        ${pr.description ? `<div class="p-proj-desc">${h(pr.description)}</div>` : ""}
+        ${linksHtml ? `<div class="p-proj-links-row">${linksHtml}</div>` : ""}
+      </div>`;
+    });
+    html += `<hr class="p-divider">`;
   }
   if (p.languages.length)
     html += `<div class="p-section">Idiomas</div><div class="p-indent">${p.languages.map((l) => `<div class="p-body">${h(l)}</div>`).join("")}</div>`;

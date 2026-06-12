@@ -183,6 +183,7 @@ def build(data, output_path, show_badge=True):
         "date":     s("dt",    fontSize=FS_BODY * 0.88, textColor=MUTED, leading=FS_BODY * 1.35),
         "bullet":   s("bul",   leading=FS_BODY * 1.45, leftIndent=10, alignment=TA_JUSTIFY),
         "status":   s("sts",   fontName=FRI, fontSize=FS_BODY * 0.94, textColor=MUTED),
+        "projlink": s("pl",    fontName=FRI, fontSize=FS_BODY * 0.85, textColor=ACCENT, spaceBefore=1, spaceAfter=0),
     }
 
     NO_STYLE = TableStyle([
@@ -310,25 +311,64 @@ def build(data, output_path, show_badge=True):
     ]))
     exp_items = [job_row(job) for job in data["experience"]]
     story += section_blocks(hdr("Histórico Profissional"), exp_items, spacer_between=6)
-    story.append(KeepTogether([
-        hdr("Tecnologias"),
-        iblock([bul(t) for t in data["technologies"]]),
-        sp(5), divider(),
-    ]))
+    techs = data.get("technologies", [])
+    if techs and isinstance(techs[0], dict):
+        tech_items = []
+        for g in techs:
+            if not g.get("items"):
+                continue
+            items_str = "  ".join(g["items"])
+            tech_items.append(Paragraph(f'<b>{g.get("title","")}</b>  {items_str}', ST["body"]))
+    else:
+        tech_items = [bul(t) for t in techs]
+    if tech_items:
+        story.append(KeepTogether([
+            hdr("Tecnologias"),
+            iblock(tech_items),
+            sp(5), divider(),
+        ]))
     edu_items = [edu_row(edu) for edu in data["education"]]
     story += section_blocks(hdr("Formação Acadêmica"), edu_items, spacer_between=4)
-    half  = len(data["skills"]) // 2 + len(data["skills"]) % 2
-    inner = Table(
-        [[[bul(s) for s in data["skills"][:half]],
-          [bul(s) for s in data["skills"][half:]]]],
-        colWidths=[(CW - INDENT) / 2, (CW - INDENT) / 2]
-    )
-    inner.setStyle(NO_STYLE)
-    story.append(KeepTogether([
-        hdr("Habilidades e Competências"),
-        iblock(inner),
-        sp(5), divider(),
-    ]))
+    skills_raw = data.get("skills", [])
+    if skills_raw and isinstance(skills_raw[0], dict):
+        flat_skills = [s for g in skills_raw for s in g.get("items", [])]
+    else:
+        flat_skills = [s for s in skills_raw if isinstance(s, str)]
+    if flat_skills:
+        half = len(flat_skills) // 2 + len(flat_skills) % 2
+        inner = Table(
+            [[[bul(s) for s in flat_skills[:half]],
+              [bul(s) for s in flat_skills[half:]]]],
+            colWidths=[(CW - INDENT) / 2, (CW - INDENT) / 2]
+        )
+        inner.setStyle(NO_STYLE)
+        story.append(KeepTogether([
+            hdr("Habilidades e Competências"),
+            iblock([inner]),
+            sp(5), divider(),
+        ]))
+    projects = data.get("projects", [])
+    if projects:
+        proj_items = []
+        for pr in projects:
+            if not pr.get("name"):
+                continue
+            proj_items.append(Paragraph(pr["name"], ST["jobtitle"]))
+            if pr.get("description"):
+                proj_items.append(Paragraph(pr["description"], ST["body"]))
+            links = [l for l in pr.get("links", []) if l.get("url")]
+            if links:
+                links_html = '  <font color="#999999">·</font>  '.join(
+                    f'<link href="{l["url"]}"><u>{l.get("label") or l["url"]}</u></link>'
+                    for l in links
+                )
+                proj_items.append(Paragraph(links_html, ST["projlink"]))
+            proj_items.append(sp(4))
+        story.append(KeepTogether([
+            hdr("Projetos"),
+            iblock(proj_items),
+            sp(5), divider(),
+        ]))
     story.append(KeepTogether([
         hdr("Idiomas"),
         iblock([Paragraph(l, ST["body"]) for l in data["languages"]]),
