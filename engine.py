@@ -33,10 +33,7 @@ _registered_fonts: dict = {}
 _fonts_registered = False
 
 def _register_family(family: str) -> tuple[str, str, str]:
-    """
-    Register a font family for ReportLab and return the three internal names
-    (regular, bold, italic). Caches registrations so we don't re-register.
-    """
+    """"""
     if family in _registered_fonts:
         return _registered_fonts[family]
 
@@ -62,7 +59,7 @@ def _register_family(family: str) -> tuple[str, str, str]:
     return r_name, rb_name, ri_name
 
 def _find_font_variants_local(family: str) -> dict | None:
-    """Look for Regular/Bold/Italic files in fonts/ folder matching the family."""
+    """"""
     if not os.path.isdir("fonts"):
         return None
     slug = family.replace(" ", "").replace("-", "")
@@ -89,7 +86,7 @@ def _find_font_variants_local(family: str) -> dict | None:
     return result
 
 def _find_font_variants_system(family: str) -> dict | None:
-    """Use fc-match to find Regular/Bold/Italic system font files."""
+    """"""
     import subprocess
     result = {}
     for variant, fc_style in {
@@ -114,7 +111,7 @@ def _find_font_variants_system(family: str) -> dict | None:
     return result if len(result) == 3 else None
 
 def _get_default_fonts() -> tuple[str, str, str]:
-    """Register and return the default Liberation Sans / Inter fonts."""
+    """"""
     global _fonts_registered
     if not _fonts_registered:
         use_inter = os.path.exists("fonts/Inter-Regular.ttf")
@@ -144,7 +141,7 @@ def calc_duration(start_str, end_str=None):
 KEEP_WITH_HEADER = 2
 
 def build(data, output_path, show_badge=True, lang="pt"):
-    # Flatten lang_contents into data so rest of engine works unchanged
+
     if "lang_contents" in data:
         lc = data["lang_contents"].get(lang) or data["lang_contents"].get("pt") or {}
         data = {**data, **lc}
@@ -248,7 +245,7 @@ def build(data, output_path, show_badge=True, lang="pt"):
         return Paragraph(f"• {text}", ST["bullet"])
 
     def job_row(job):
-        """Build the two-column row for a single job."""
+        """"""
         duration  = calc_duration(job["start_date"], job.get("end_date") or None)
         end_label = "Atual" if not job.get("end_date") else job["end_date"]
         JL        = 1.3 * inch
@@ -275,11 +272,7 @@ def build(data, output_path, show_badge=True, lang="pt"):
         row.setStyle(NO_STYLE)
         return iblock(row)
     def section_blocks(header_el, items, spacer_between=6, trailing_spacer=5):
-        """
-        Returns a list of flowables for a section, applying KeepTogether
-        so the header always stays with at least KEEP_WITH_HEADER items.
-        Items beyond that threshold may flow freely across pages.
-        """
+        """"""
         if not items:
             return [header_el, sp(trailing_spacer), divider()]
 

@@ -1887,7 +1887,6 @@ body {
   }
 }
 
-/* ── Skill Groups (Editor) ─────────────────────────────────── */
 .skill-group {
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -1916,7 +1915,6 @@ body {
   border-color: var(--accent);
 }
 
-/* ── PDF: Skills groups ────────────────────────────────────── */
 .p-skills-group {
   display: flex;
   align-items: baseline;
@@ -1945,7 +1943,6 @@ body {
   padding: 1px 5px;
 }
 
-/* ── PDF: Projects ─────────────────────────────────────────── */
 .p-proj {
   margin-bottom: 2px;
 }
@@ -1979,7 +1976,6 @@ body {
   font-size: 8px;
 }
 
-/* ── Project editor card ───────────────────────────────────── */
 .proj-card .field {
   margin-bottom: 10px;
 }
@@ -2010,7 +2006,6 @@ body {
   margin-top: 8px;
 }
 
-/* ── Sidebar: Lixeira ──────────────────────────────────────── */
 .sidebar-bottom {
   border-top: 1px solid var(--border);
   padding: 8px;
@@ -2052,7 +2047,6 @@ body {
   padding: 0 5px;
 }
 
-/* ── Modal: Lixeira ────────────────────────────────────────── */
 .modal-trash {
   max-width: 520px;
 }
@@ -2101,7 +2095,6 @@ body {
   font-size: 12px;
 }
 
-/* ── Sidebar: busca de perfis ─────────────────────────────────── */
 .sidebar-search {
   display: flex;
   flex-direction: column;
@@ -2165,7 +2158,6 @@ body {
   line-height: 1.5;
 }
 
-/* ── Resultados da lixeira na busca ────────────────────────────── */
 .profile-card.trash-result {
   opacity: 0.75;
 }
@@ -2189,7 +2181,6 @@ body {
   vertical-align: middle;
 }
 
-/* ── Drag to reorder ─────────────────────────────────────────── */
 .drag-handle {
   cursor: grab;
   color: var(--text3);
@@ -2208,13 +2199,12 @@ body {
 }
 .repeat-item.dragging {
   opacity: 0.45;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18);
   border-color: var(--accent);
   z-index: 10;
   position: relative;
 }
 
-/* ── Lang tabs ──────────────────────────────────────────────── */
 .lang-toggle-bar {
   display: flex;
   flex-direction: column;
@@ -2253,7 +2243,6 @@ body {
   line-height: 1.5;
 }
 
-/* ── Global lang toggle (topbar) ────────────────────────────── */
 .lang-global-toggle {
   background: transparent;
   border: 1px solid var(--border);

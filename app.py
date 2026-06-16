@@ -21,7 +21,7 @@ def save_data(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def purge_expired_trash(data):
-    """Remove trash items older than TRASH_RETENTION_DAYS."""
+    """"""
     cutoff = datetime.now(timezone.utc) - timedelta(days=TRASH_RETENTION_DAYS)
     kept = []
     changed = False
@@ -65,7 +65,7 @@ def save_profile():
 
 @app.route("/api/profiles/<pid>", methods=["DELETE"])
 def delete_profile(pid):
-    """Move a profile to the trash instead of deleting it permanently."""
+    """"""
     data = load_data()
     profile = next((p for p in data["profiles"] if p["id"] == pid), None)
     if profile is None:
@@ -91,7 +91,7 @@ def restore_profile(pid):
     restored = dict(item)
     restored.pop("deleted_at", None)
     data["trash"] = [t for t in data["trash"] if t["id"] != pid]
-    # Avoid id collisions with existing profiles
+
     if any(p["id"] == restored["id"] for p in data["profiles"]):
         restored["id"] = str(uuid.uuid4())[:8]
     data["profiles"].append(restored)
@@ -110,7 +110,7 @@ def delete_trash_permanently(pid):
 
 @app.route("/api/fonts")
 def list_fonts():
-    """Return available font families from the local fonts/ folder."""
+    """"""
     import re
     fonts_dir = "fonts"
     families = set()

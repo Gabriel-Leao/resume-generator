@@ -8,7 +8,6 @@ let previewOpen = false,
 let _deleteSectionId = null,
   _deleteSectionEl = null;
 let _nextSectionId = 1;
-//   rg_dir_name    — display name of saved dir (e.g. "Downloads")
 
 const supportsFilePicker = !!window.showSaveFilePicker;
 function idbOpen() {
@@ -257,13 +256,13 @@ function loadEditor(p) {
   document.getElementById("edu-list").innerHTML = "";
   (lc.education || []).forEach(addEducation);
   renderSimpleList("lang-list", lc.languages || []);
-  // Technologies as groups
+  
   document.getElementById("tech-groups").innerHTML = "";
   const techData = lc.technologies || [];
   if (techData.length && typeof techData[0] === "object") {
     techData.forEach(g => addTechGroup(g));
   } else if (techData.length) {
-    // legacy: strings like "Front-end: React, TS" → parse into groups
+    
     techData.forEach(line => {
       const colon = line.indexOf(":");
       if (colon > -1) {
@@ -275,7 +274,7 @@ function loadEditor(p) {
   } else {
     addTechGroup();
   }
-  // Skills as flat list (no title)
+  
   renderSimpleList("skills-list", (() => {
     const sd = lc.skills || [];
     if (!sd.length) return [];
@@ -390,7 +389,7 @@ function removeRepeat(btn, listId, countId) {
     document.querySelectorAll(`#${listId} .repeat-item`).length,
   );
   schedulePreview();
-  // Auto-save on remove so user doesn't need to manually save
+  
   if (activeId) {
     const profile = collectProfile();
     fetch("/api/profiles", {
@@ -602,7 +601,7 @@ function collectProfile() {
       .map((i) => i.value.trim())
       .filter(Boolean),
   }));
-  // Get existing profile to preserve other lang's content
+  
   const existingProfile = profiles.find(x => x.id === activeId) || {};
   const existingLangContents = existingProfile.lang_contents || { pt: {}, en: {} };
   const langContent = {
@@ -756,7 +755,6 @@ function resetToEmpty() {
   setDirty(false);
 }
 
-/* ── Lixeira ────────────────────────────────────────────────── */
 let trashItems = [];
 function refreshTrashCount() {
   fetch("/api/trash")
@@ -774,7 +772,7 @@ function refreshTrashCount() {
       if (toggleWrap) {
         toggleWrap.style.display = items.length ? "flex" : "none";
       }
-      // Re-apply active search now that trash data is fresh
+      
       const search = document.getElementById("profile-search");
       if (search && search.value.trim()) filterProfiles();
     })
@@ -1328,25 +1326,23 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && mobilePreviewOpen) toggleMobilePreview();
 });
 
-
 function toggleGlobalLang() {
   const newLang = activeLang === "pt" ? "en" : "pt";
-  // Save current editor state into in-memory profiles before switching
+  
   if (activeId) {
     const current = collectProfile();
     const idx = profiles.findIndex(x => x.id === activeId);
     if (idx > -1) profiles[idx] = current;
   }
   activeLang = newLang;
-  // Update topbar toggle label
+  
   const label = document.getElementById("lang-global-label");
   if (label) label.textContent = newLang === "pt" ? "🇧🇷 PT" : "🇺🇸 EN";
-  // Reload editor if a profile is open
+  
   const p = profiles.find(x => x.id === activeId);
   if (p) loadEditor(p);
 }
 
-/* ── Drag-to-reorder ─────────────────────────────────────────── */
 function initDragSort(listId) {
   const list = document.getElementById(listId);
   if (!list) return;
