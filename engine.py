@@ -143,7 +143,11 @@ def calc_duration(start_str, end_str=None):
         return f"{years} {'ano' if years == 1 else 'anos'} e {rem} {'mês' if rem == 1 else 'meses'}"
 KEEP_WITH_HEADER = 2
 
-def build(data, output_path, show_badge=True):
+def build(data, output_path, show_badge=True, lang="pt"):
+    # Flatten lang_contents into data so rest of engine works unchanged
+    if "lang_contents" in data:
+        lc = data["lang_contents"].get(lang) or data["lang_contents"].get("pt") or {}
+        data = {**data, **lc}
     ensure_fonts()
     family = data.get("font_family", "").strip()
     if family:

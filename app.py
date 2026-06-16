@@ -127,13 +127,15 @@ def generate():
     body       = request.json
     profile    = body["profile"]
     show_badge = body.get("show_badge", True)
+    lang       = body.get("lang", "pt")
     name       = profile.get("name", "resume").replace(" ", "_")
-    version    = profile.get("version", "cv") or "cv"
+    lc         = (profile.get("lang_contents") or {}).get(lang) or (profile.get("lang_contents") or {}).get("pt") or {}
+    version    = lc.get("version") or profile.get("version", "cv") or "cv"
     filename   = f"{name}_{version}.pdf"
     tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     tmp.close()
     try:
-        build(profile, tmp.name, show_badge=show_badge)
+        build(profile, tmp.name, show_badge=show_badge, lang=lang)
         return send_file(
             tmp.name,
             as_attachment=True,

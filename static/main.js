@@ -1,12 +1,14 @@
 let profiles = [],
   activeId = null,
-  isDirty = false;
+  isDirty = false,
+  activeLang = "pt";
 let _savedSnapshot = null;
 let previewOpen = false,
   previewTimer = null;
 let _deleteSectionId = null,
   _deleteSectionEl = null;
 let _nextSectionId = 1;
+//   rg_dir_name    — display name of saved dir (e.g. "Downloads")
 
 const supportsFilePicker = !!window.showSaveFilePicker;
 function idbOpen() {
@@ -169,6 +171,7 @@ function selectProfile(id) {
 function newProfile() {
   activeId = null;
   renderSidebar();
+  activeLang = "pt";
   loadEditor({
     label: "",
     version: "",
@@ -180,19 +183,15 @@ function newProfile() {
     linkedin_url: "",
     github_label: "GitHub",
     github_url: "",
-    resumo: "",
-    experience: [],
-    technologies: [],
-    education: [],
-    skills: [],
-    projects: [],
-    languages: [],
-    custom_sections: [],
     font_family: "",
     theme_accent: "#1B3A6B",
     theme_body: "#111111",
     theme_muted: "#555555",
     show_badge: false,
+    lang_contents: {
+      pt: { resumo: "", experience: [], technologies: [], education: [], skills: [], projects: [], languages: [], custom_sections: [] },
+      en: {},
+    },
   });
   document.getElementById("topbar-actions").style.display = "flex";
   setDirty(false);
@@ -222,13 +221,18 @@ document.addEventListener("change", (e) => {
     schedulePreview();
   }
 });
+function getLangContent(p, lang) {
+  const lc = p.lang_contents || {};
+  return lc[lang] || lc["pt"] || {};
+}
 function loadEditor(p) {
+  const lc = getLangContent(p, activeLang);
   document.getElementById("empty-state").style.display = "none";
   document.getElementById("editor").style.display = "block";
   document.getElementById("topbar-title").textContent =
     p.label || p.name || "Novo Perfil";
   V("f-label", p.label);
-  V("f-version", p.version);
+  V("f-version", (p.lang_contents?.[activeLang]?.version) ?? (p.lang_contents?.pt?.version) ?? p.version ?? "");
   V("f-name", p.name);
   V("f-location", p.location);
   V("f-phone", p.phone);
@@ -237,7 +241,7 @@ function loadEditor(p) {
   V("f-linkedin-url", p.linkedin_url);
   V("f-github-label", p.github_label || "GitHub");
   V("f-github-url", p.github_url);
-  V("f-resumo", p.resumo);
+  V("f-resumo", lc.resumo || "");
   V("f-accent", p.theme_accent || "#1B3A6B");
   document.getElementById("f-accent-picker").value =
     p.theme_accent || "#1B3A6B";
@@ -249,15 +253,17 @@ function loadEditor(p) {
   document.getElementById("f-badge").checked = p.show_badge === true;
   clearAllErrors();
   document.getElementById("exp-list").innerHTML = "";
-  (p.experience || []).forEach(addExperience);
+  (lc.experience || []).forEach(addExperience);
   document.getElementById("edu-list").innerHTML = "";
-  (p.education || []).forEach(addEducation);
-  renderSimpleList("lang-list", p.languages || []);
+  (lc.education || []).forEach(addEducation);
+  renderSimpleList("lang-list", lc.languages || []);
+  // Technologies as groups
   document.getElementById("tech-groups").innerHTML = "";
-  const techData = p.technologies || [];
+  const techData = lc.technologies || [];
   if (techData.length && typeof techData[0] === "object") {
     techData.forEach(g => addTechGroup(g));
   } else if (techData.length) {
+    // legacy: strings like "Front-end: React, TS" → parse into groups
     techData.forEach(line => {
       const colon = line.indexOf(":");
       if (colon > -1) {
@@ -269,19 +275,24 @@ function loadEditor(p) {
   } else {
     addTechGroup();
   }
+  // Skills as flat list (no title)
   renderSimpleList("skills-list", (() => {
-    const sd = p.skills || [];
+    const sd = lc.skills || [];
     if (!sd.length) return [];
     if (typeof sd[0] === "object") return sd.flatMap(g => g.items || []);
     return sd;
   })());
   document.getElementById("proj-list").innerHTML = "";
-  (p.projects || []).forEach(addProject);
-  updateCount("exp-count", (p.experience || []).length);
-  updateCount("edu-count", (p.education || []).length);
-  updateCount("proj-count", (p.projects || []).length);
+  (lc.projects || []).forEach(addProject);
+  initDragSort("exp-list");
+  initDragSort("edu-list");
+  initDragSort("proj-list");
+  updateCount("exp-count", (lc.experience || []).length);
+  updateCount("edu-count", (lc.education || []).length);
+  updateCount("proj-count", (lc.projects || []).length);
   document.getElementById("custom-sections-container").innerHTML = "";
-  (p.custom_sections || []).forEach((cs) => renderCustomSection(cs));
+  (lc.custom_sections || []).forEach((cs) => renderCustomSection(cs));
+
   if (previewOpen) renderPreview();
   setTimeout(() => {
     _savedSnapshot = JSON.stringify(collectProfile());
@@ -300,6 +311,7 @@ function addExperience(data = {}) {
   const idx = document.querySelectorAll("#exp-list .repeat-item").length + 1;
   el.innerHTML = `
     <div class="repeat-item-header">
+      <span class="drag-handle" title="Arrastar para reordenar">⠿</span>
       <span class="repeat-item-num">Exp ${idx}</span>
       <button class="btn-remove-item" onclick="removeRepeat(this,'exp-list','exp-count')">✕ remover</button>
     </div>
@@ -327,6 +339,7 @@ function addExperience(data = {}) {
     "exp-count",
     document.querySelectorAll("#exp-list .repeat-item").length,
   );
+  initDragSort("exp-list");
 }
 function addBullet(btn) {
   addBulletTo(btn.previousElementSibling, "");
@@ -344,6 +357,7 @@ function addEducation(data = {}) {
   const idx = document.querySelectorAll("#edu-list .repeat-item").length + 1;
   el.innerHTML = `
     <div class="repeat-item-header">
+      <span class="drag-handle" title="Arrastar para reordenar">⠿</span>
       <span class="repeat-item-num">Edu ${idx}</span>
       <button class="btn-remove-item" onclick="removeRepeat(this,'edu-list','edu-count')">✕ remover</button>
     </div>
@@ -362,6 +376,7 @@ function addEducation(data = {}) {
         <input class="edu-institution" type="text" value="${ea(data.institution)}" placeholder="FIAP · São Paulo"></div>
     </div>`;
   document.getElementById("edu-list").appendChild(el);
+  initDragSort("edu-list");
   updateCount(
     "edu-count",
     document.querySelectorAll("#edu-list .repeat-item").length,
@@ -374,6 +389,19 @@ function removeRepeat(btn, listId, countId) {
     countId,
     document.querySelectorAll(`#${listId} .repeat-item`).length,
   );
+  schedulePreview();
+  // Auto-save on remove so user doesn't need to manually save
+  if (activeId) {
+    const profile = collectProfile();
+    fetch("/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    }).then(() => {
+      _savedSnapshot = JSON.stringify(collectProfile());
+      setDirty(false);
+    });
+  }
 }
 function renderSimpleList(id, items) {
   document.getElementById(id).innerHTML = "";
@@ -434,6 +462,7 @@ function addProject(data = {}) {
   const idx = document.querySelectorAll("#proj-list .repeat-item").length + 1;
   el.innerHTML = `
     <div class="repeat-item-header">
+      <span class="drag-handle" title="Arrastar para reordenar">⠿</span>
       <span class="repeat-item-num">Proj ${idx}</span>
       <button class="btn-remove-item" onclick="removeRepeat(this,'proj-list','proj-count')">✕ remover</button>
     </div>
@@ -447,6 +476,7 @@ function addProject(data = {}) {
       <button class="btn-add-item proj-add-link" onclick="addProjectLink(this.previousElementSibling)">+ Adicionar link</button>
     </div>`;
   document.getElementById("proj-list").appendChild(el);
+  initDragSort("proj-list");
   const linksEl = el.querySelector(".proj-links-list");
   (data.links || []).forEach(l => addProjectLinkTo(linksEl, l));
   if (!(data.links || []).length) addProjectLinkTo(linksEl, {});
@@ -572,18 +602,11 @@ function collectProfile() {
       .map((i) => i.value.trim())
       .filter(Boolean),
   }));
-  return {
-    id: activeId,
-    label: G("f-label"),
+  // Get existing profile to preserve other lang's content
+  const existingProfile = profiles.find(x => x.id === activeId) || {};
+  const existingLangContents = existingProfile.lang_contents || { pt: {}, en: {} };
+  const langContent = {
     version: G("f-version"),
-    name: G("f-name"),
-    location: G("f-location"),
-    phone: G("f-phone"),
-    email: G("f-email"),
-    linkedin_label: G("f-linkedin-label"),
-    linkedin_url: G("f-linkedin-url"),
-    github_label: G("f-github-label"),
-    github_url: G("f-github-url"),
     resumo: G("f-resumo"),
     experience,
     education,
@@ -603,11 +626,27 @@ function collectProfile() {
     })).filter(p => p.name),
     languages: getSimpleList("lang-list"),
     custom_sections,
+  };
+  return {
+    id: activeId,
+    label: G("f-label"),
+    name: G("f-name"),
+    location: G("f-location"),
+    phone: G("f-phone"),
+    email: G("f-email"),
+    linkedin_label: G("f-linkedin-label"),
+    linkedin_url: G("f-linkedin-url"),
+    github_label: G("f-github-label"),
+    github_url: G("f-github-url"),
     font_family: G("f-font-family"),
     theme_accent: G("f-accent"),
     theme_body: G("f-body"),
     theme_muted: G("f-muted"),
     show_badge: document.getElementById("f-badge").checked,
+    lang_contents: {
+      ...existingLangContents,
+      [activeLang]: langContent,
+    },
   };
 }
 function validate() {
@@ -735,6 +774,7 @@ function refreshTrashCount() {
       if (toggleWrap) {
         toggleWrap.style.display = items.length ? "flex" : "none";
       }
+      // Re-apply active search now that trash data is fresh
       const search = document.getElementById("profile-search");
       if (search && search.value.trim()) filterProfiles();
     })
@@ -926,7 +966,9 @@ async function generate(forceProfile = null) {
     openModal("modal-unsaved-generate");
     return;
   }
-  const profile = forceProfile || collectProfile();
+  const rawProfile = forceProfile || collectProfile();
+  const lc = (rawProfile.lang_contents || {})[activeLang] || (rawProfile.lang_contents || {}).pt || {};
+  const profile = { ...rawProfile, ...lc };
   const show_badge = document.getElementById("f-badge").checked;
   const btn = document.getElementById("btn-generate");
   const namePart = (profile.name || "resume").replace(/\s+/g, "_");
@@ -943,7 +985,7 @@ async function generate(forceProfile = null) {
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile, show_badge }),
+      body: JSON.stringify({ profile, show_badge, lang: activeLang }),
     });
     if (!res.ok) {
       const e = await res.json();
@@ -1285,3 +1327,74 @@ window.setDirty = function (v) {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && mobilePreviewOpen) toggleMobilePreview();
 });
+
+
+function toggleGlobalLang() {
+  const newLang = activeLang === "pt" ? "en" : "pt";
+  // Save current editor state into in-memory profiles before switching
+  if (activeId) {
+    const current = collectProfile();
+    const idx = profiles.findIndex(x => x.id === activeId);
+    if (idx > -1) profiles[idx] = current;
+  }
+  activeLang = newLang;
+  // Update topbar toggle label
+  const label = document.getElementById("lang-global-label");
+  if (label) label.textContent = newLang === "pt" ? "🇧🇷 PT" : "🇺🇸 EN";
+  // Reload editor if a profile is open
+  const p = profiles.find(x => x.id === activeId);
+  if (p) loadEditor(p);
+}
+
+/* ── Drag-to-reorder ─────────────────────────────────────────── */
+function initDragSort(listId) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  let dragging = null;
+
+  list.querySelectorAll(".drag-handle").forEach((handle) => {
+    handle.addEventListener("mousedown", startDrag);
+    handle.addEventListener("touchstart", startDrag, { passive: false });
+  });
+
+  function startDrag(e) {
+    e.preventDefault();
+    dragging = e.target.closest(".repeat-item");
+    if (!dragging) return;
+    dragging.classList.add("dragging");
+    const onMove = e.type === "touchstart" ? onTouchMove : onMouseMove;
+    const onEnd  = e.type === "touchstart" ? onTouchEnd  : onMouseUp;
+    document.addEventListener(e.type === "touchstart" ? "touchmove" : "mousemove", onMove, { passive: false });
+    document.addEventListener(e.type === "touchstart" ? "touchend"  : "mouseup",   onEnd,  { once: true });
+  }
+
+  function clientY(e) {
+    return e.touches ? e.touches[0].clientY : e.clientY;
+  }
+
+  function onMouseMove(e) { move(e); }
+  function onTouchMove(e) { e.preventDefault(); move(e); }
+
+  function move(e) {
+    if (!dragging) return;
+    const y = clientY(e);
+    const siblings = [...list.querySelectorAll(".repeat-item:not(.dragging)")];
+    const after = siblings.find((s) => {
+      const rect = s.getBoundingClientRect();
+      return y < rect.top + rect.height / 2;
+    });
+    if (after) list.insertBefore(dragging, after);
+    else list.appendChild(dragging);
+  }
+
+  function onMouseUp()  { end(); document.removeEventListener("mousemove", onMouseMove); }
+  function onTouchEnd() { end(); document.removeEventListener("touchmove", onTouchMove); }
+
+  function end() {
+    if (!dragging) return;
+    dragging.classList.remove("dragging");
+    dragging = null;
+    schedulePreview();
+    checkDirty();
+  }
+}
