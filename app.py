@@ -128,10 +128,15 @@ def generate():
     profile    = body["profile"]
     show_badge = body.get("show_badge", True)
     lang       = body.get("lang", "pt")
-    name       = profile.get("name", "resume").replace(" ", "_")
+    import unicodedata, re as _re
+    def _slug(s):
+        s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+        s = _re.sub(r"[^a-zA-Z0-9]+", "_", s).strip("_")
+        return s
     lc         = (profile.get("lang_contents") or {}).get(lang) or (profile.get("lang_contents") or {}).get("pt") or {}
     version    = lc.get("version") or profile.get("version", "cv") or "cv"
-    filename   = f"{name}_{version}.pdf"
+    version_clean = _re.sub(r"\s*[–—·].*$", "", version).strip()
+    filename   = f"Gabriel_Leao_{_slug(version_clean)}_{lang.upper()}.pdf"
     tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     tmp.close()
     try:

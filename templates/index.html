@@ -389,6 +389,36 @@
                   </div>
                   <div class="field">
                     <label class="field-label"
+                      >Nome do arquivo PDF
+                      <span
+                        class="tip"
+                        data-tip="Prefixo do arquivo gerado. Ex: gabriel_leao → gabriel_leao_PT.pdf. Se vazio, usa o padrão: gabriel_leao."
+                        >?</span
+                      ></label
+                    >
+                    <input
+                      id="f-pdf-filename"
+                      type="text"
+                      placeholder="gabriel_leao"
+                    />
+                  </div>
+                  <div class="field">
+                    <label class="field-label"
+                      >Pretensão salarial
+                      <span
+                        class="tip"
+                        data-tip="Opcional. Não aparece no PDF — serve só como referência pessoal dentro do perfil."
+                        >?</span
+                      ></label
+                    >
+                    <input
+                      id="f-salary"
+                      type="text"
+                      placeholder="R$ 4.000 – R$ 5.500"
+                    />
+                  </div>
+                  <div class="field">
+                    <label class="field-label"
                       >Localização <span class="required">*</span></label
                     >
                     <input
@@ -908,6 +938,22 @@
       <option value="Demo"></option>
       <option value="Documentação"></option>
     </datalist>
+
+    <div class="modal-backdrop" id="modal-also-en" onclick="closeModal('modal-also-en')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Gerar também em inglês?</h3>
+          <button class="modal-close" onclick="closeModal('modal-also-en')">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">Este perfil tem conteúdo em inglês válido. Quer gerar os dois PDFs agora?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('modal-also-en');_pendingGenerateCb&&_pendingGenerateCb(false)">Só este idioma</button>
+          <button class="btn btn-success" onclick="closeModal('modal-also-en');_pendingGenerateCb&&_pendingGenerateCb(true)">Gerar os dois</button>
+        </div>
+      </div>
+    </div>
 
     <div class="modal-backdrop" id="modal-unsaved-generate" onclick="closeModal('modal-unsaved-generate')">
       <div class="modal" onclick="event.stopPropagation()">

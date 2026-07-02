@@ -113,17 +113,24 @@ function renderSidebar() {
   el.innerHTML = profiles.map((p) => profileCardHtml(p)).join("");
 }
 function profileCardHtml(p) {
+  const lc = (p.lang_contents || {})[activeLang] || (p.lang_contents || {}).pt || {};
+  const version = lc.version || p.version || "";
+  const otherLang = activeLang === "pt" ? "en" : "pt";
+  const hasOther = isLangValid(p, otherLang);
+  const langBadge = `<span class="lang-card-badge">${activeLang === "pt" ? "PT" : "EN"}${hasOther ? ` · ${otherLang.toUpperCase()}` : ""}</span>`;
   return `
     <div class="profile-card ${p.id === activeId ? "active" : ""}" onclick="selectProfile('${p.id}')">
-      <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")}</div>
-      <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + esc(p.version) : ""}</div>
+      <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")} ${langBadge}</div>
+      <div class="profile-card-meta">${esc(p.name || "")}${version ? " · " + esc(version) : ""}</div>
     </div>`;
 }
 function trashCardHtml(p) {
+  const lc = (p.lang_contents || {}).pt || {};
+  const version = lc.version || p.version || "";
   return `
     <div class="profile-card trash-result" onclick="openTrash()">
       <div class="profile-card-label">${esc(p.label || p.name || "Sem nome")} <span class="trash-badge">Lixeira</span></div>
-      <div class="profile-card-meta">${esc(p.name || "")}${p.version ? " · " + esc(p.version) : ""}</div>
+      <div class="profile-card-meta">${esc(p.name || "")}${version ? " · " + esc(version) : ""}</div>
     </div>`;
 }
 function matchesQuery(p, q) {
@@ -233,6 +240,8 @@ function loadEditor(p) {
   V("f-label", p.label);
   V("f-version", (p.lang_contents?.[activeLang]?.version) ?? (p.lang_contents?.pt?.version) ?? p.version ?? "");
   V("f-name", p.name);
+  V("f-pdf-filename", p.pdf_filename || "");
+  V("f-salary", p.salary_expectation || "");
   V("f-location", p.location);
   V("f-phone", p.phone);
   V("f-email", p.email);
@@ -630,6 +639,8 @@ function collectProfile() {
     id: activeId,
     label: G("f-label"),
     name: G("f-name"),
+    pdf_filename: G("f-pdf-filename"),
+    salary_expectation: G("f-salary"),
     location: G("f-location"),
     phone: G("f-phone"),
     email: G("f-email"),
@@ -942,10 +953,12 @@ async function confirmSaveDir() {
     _pendingDirHandle = null;
   }
 }
+let _pendingGenerateCb = null;
+
 async function saveAndGenerate() {
   closeModal("modal-unsaved-generate");
   saveProfile();
-  await generate(collectProfile());
+  await _doGenerate(collectProfile());
 }
 async function generateWithoutSaving() {
   closeModal("modal-unsaved-generate");
@@ -953,7 +966,7 @@ async function generateWithoutSaving() {
     toast("Nenhuma versão salva encontrada", "error");
     return;
   }
-  await generate(JSON.parse(_savedSnapshot));
+  await _doGenerate(JSON.parse(_savedSnapshot));
 }
 async function generate(forceProfile = null) {
   if (!validate()) {
@@ -964,13 +977,33 @@ async function generate(forceProfile = null) {
     openModal("modal-unsaved-generate");
     return;
   }
-  const rawProfile = forceProfile || collectProfile();
-  const lc = (rawProfile.lang_contents || {})[activeLang] || (rawProfile.lang_contents || {}).pt || {};
+  await _doGenerate(forceProfile || collectProfile());
+}
+async function _doGenerate(rawProfile) {
+  const otherLang = activeLang === "pt" ? "en" : "pt";
+  if (isLangValid(rawProfile, otherLang)) {
+    await new Promise(resolve => {
+      _pendingGenerateCb = async (also) => {
+        _pendingGenerateCb = null;
+        await _generateForLang(rawProfile, activeLang);
+        if (also) await _generateForLang(rawProfile, otherLang);
+        resolve();
+      };
+      openModal("modal-also-en");
+    });
+    return;
+  }
+  await _generateForLang(rawProfile, activeLang);
+}
+async function _generateForLang(rawProfile, lang) {
+  const lc = (rawProfile.lang_contents || {})[lang] || (rawProfile.lang_contents || {}).pt || {};
   const profile = { ...rawProfile, ...lc };
   const show_badge = document.getElementById("f-badge").checked;
   const btn = document.getElementById("btn-generate");
-  const namePart = (profile.name || "resume").replace(/\s+/g, "_");
-  const filename = `${namePart}_${profile.version || "cv"}.pdf`;
+  const customName = (rawProfile.pdf_filename || "").trim();
+  const filename = customName
+    ? `${customName}_${lang.toUpperCase()}.pdf`
+    : `gabriel_leao_${lang.toUpperCase()}.pdf`;
 
   btn.disabled = true;
   btn.textContent = "Gerando...";
@@ -1010,48 +1043,7 @@ async function generate(forceProfile = null) {
   }
 }
 async function saveBlob(blob, filename) {
-  if (!supportsFilePicker) {
-    triggerDownload(blob, filename);
-    return;
-  }
-
-  const alwaysAsk = localStorage.getItem("rg_always_ask") === "1";
-  const savedDir = await idbGet("rg_dir_handle").catch(() => null);
-
-  if (!alwaysAsk && savedDir) {
-    try {
-      await savedDir.requestPermission({ mode: "readwrite" });
-      const fileHandle = await savedDir.getFileHandle(filename, {
-        create: true,
-      });
-      const writable = await fileHandle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return;
-    } catch (err) {
-      await idbDel("rg_dir_handle");
-      localStorage.removeItem("rg_dir_name");
-      updateDirHint("");
-    }
-  }
-  try {
-    const fileHandle = await window.showSaveFilePicker({
-      suggestedName: filename,
-      types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
-    });
-    const writable = await fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-    if (!savedDir && !alwaysAsk && !localStorage.getItem("rg_dir_name")) {
-      _pendingDirHandle = null;
-      openModal("modal-save-dir");
-      document.getElementById("modal-dir-name").textContent =
-        "uma pasta padrão";
-    }
-  } catch (err) {
-    if (err.name === "AbortError") return;
-    throw err;
-  }
+  triggerDownload(blob, filename);
 }
 
 function triggerDownload(blob, filename) {
@@ -1328,19 +1320,26 @@ document.addEventListener("keydown", (e) => {
 
 function toggleGlobalLang() {
   const newLang = activeLang === "pt" ? "en" : "pt";
-  
   if (activeId) {
     const current = collectProfile();
     const idx = profiles.findIndex(x => x.id === activeId);
     if (idx > -1) profiles[idx] = current;
   }
   activeLang = newLang;
-  
-  const label = document.getElementById("lang-global-label");
-  if (label) label.textContent = newLang === "pt" ? "🇧🇷 PT" : "🇺🇸 EN";
-  
+  updateLangUI();
   const p = profiles.find(x => x.id === activeId);
   if (p) loadEditor(p);
+}
+
+function updateLangUI() {
+  const label = document.getElementById("lang-global-label");
+  if (label) label.textContent = activeLang === "pt" ? "🇧🇷 PT" : "🇺🇸 EN";
+  renderSidebar();
+}
+
+function isLangValid(p, lang) {
+  const lc = (p.lang_contents || {})[lang] || {};
+  return !!(lc.resumo && (lc.experience || []).length > 0 && (lc.skills || []).length > 0);
 }
 
 function initDragSort(listId) {
